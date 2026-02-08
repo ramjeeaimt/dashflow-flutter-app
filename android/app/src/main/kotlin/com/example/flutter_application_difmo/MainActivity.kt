@@ -1,4 +1,4 @@
-package com.example.flutter_application_difmo
+package com.difmo.dashflow
 
 import io.flutter.embedding.android.FlutterActivity
 
