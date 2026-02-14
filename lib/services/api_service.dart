@@ -9,7 +9,7 @@ class ApiService {
   // Use 10.0.2.2 for Android emulator to access host localhost
   // Use your machine's IP address for physical device
   // static const String baseUrl = 'http://10.0.2.2:5000';
-  static const String baseUrl = 'https://difmo-crm-backend.onrender.com';
+  static const String baseUrl = 'https://difmo-crm-backend.vercel.app';
 
   static void _logRequest(
     String method,
