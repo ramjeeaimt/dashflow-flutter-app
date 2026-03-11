@@ -3,14 +3,12 @@ import 'dart:convert';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
-import 'package:google_maps_webservice/places.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_application_difmo/services/api_provider.dart';
 
 const kGoogleApiKey =
     "AIzaSyClF12i0eHy7Nrig6EYu8Z4U5DA2zC09OI"; // 🔑 Replace with your key
-final GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 
 class LocationConfirmPage extends ConsumerStatefulWidget {
   final bool isCheckIn;
@@ -71,7 +69,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
     }
 
     Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
 
     if (!mounted) return;
@@ -162,37 +160,22 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
   }
 
   Future<void> _handleSearch() async {
-    if (kGoogleApiKey.contains("YOUR_")) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please configure Google Maps API Key in location_page.dart",
-          ),
-        ),
-      );
-      return;
-    }
-    Prediction? p = await PlacesAutocomplete.show(
+    final TextEditingController searchCtrl = TextEditingController();
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      apiKey: kGoogleApiKey,
-      mode: Mode.overlay, // fullScreen also possible
-      language: "en",
-      components: [Component(Component.country, "in")], // restrict to India
+      builder: (ctx) => _PlacesSearchDialog(
+        apiKey: kGoogleApiKey,
+        searchController: searchCtrl,
+      ),
     );
 
-    if (p != null) {
-      if (!mounted) return;
-      PlacesDetailsResponse detail = await _places.getDetailsByPlaceId(
-        p.placeId!,
-      );
-      final lat = detail.result.geometry!.location.lat;
-      final lng = detail.result.geometry!.location.lng;
-
+    if (result != null && mounted) {
+      final lat = (result['lat'] as num).toDouble();
+      final lng = (result['lng'] as num).toDouble();
       setState(() {
         currentPosition = LatLng(lat, lng);
-        address = detail.result.formattedAddress ?? "No address found";
+        address = result['address'] as String? ?? 'No address found';
       });
-
       mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(target: LatLng(lat, lng), zoom: 16),
@@ -395,6 +378,132 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Dialog widget that fetches Place autocomplete results using the REST API
+class _PlacesSearchDialog extends StatefulWidget {
+  final String apiKey;
+  final TextEditingController searchController;
+
+  const _PlacesSearchDialog({
+    required this.apiKey,
+    required this.searchController,
+  });
+
+  @override
+  State<_PlacesSearchDialog> createState() => _PlacesSearchDialogState();
+}
+
+class _PlacesSearchDialogState extends State<_PlacesSearchDialog> {
+  List<dynamic> _predictions = [];
+  bool _isLoading = false;
+
+  Future<void> _fetchPredictions(String input) async {
+    if (input.isEmpty) {
+      setState(() => _predictions = []);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+        '?input=${Uri.encodeComponent(input)}'
+        '&key=${widget.apiKey}'
+        '&language=en'
+        '&components=country:in',
+      );
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _predictions = data['predictions'] ?? [];
+        });
+      }
+    } catch (_) {
+      // silently fail
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _getPlaceDetails(String placeId) async {
+    final url = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/details/json'
+      '?place_id=$placeId'
+      '&key=${widget.apiKey}'
+      '&fields=geometry,formatted_address',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final result = data['result'];
+      if (result != null) {
+        return {
+          'lat': result['geometry']['location']['lat'],
+          'lng': result['geometry']['location']['lng'],
+          'address': result['formatted_address'],
+        };
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Search Location'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: widget.searchController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Type a location...',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: _fetchPredictions,
+            ),
+            const SizedBox(height: 8),
+            if (_isLoading) const LinearProgressIndicator(),
+            if (_predictions.isNotEmpty)
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _predictions.length,
+                  itemBuilder: (ctx, i) {
+                    final p = _predictions[i];
+                    return ListTile(
+                      leading: const Icon(Icons.location_on_outlined),
+                      title: Text(
+                        p['description'] ?? '',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onTap: () async {
+                        final details =
+                            await _getPlaceDetails(p['place_id'] ?? '');
+                        if (context.mounted) {
+                          Navigator.of(context).pop(details);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ],
     );
   }
 }

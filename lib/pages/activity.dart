@@ -168,7 +168,7 @@ class ActivityCard extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: isClockIn
-                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                    ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                     : Colors.pink[50],
                 child: Icon(
                   isClockIn ? Icons.login : Icons.logout,

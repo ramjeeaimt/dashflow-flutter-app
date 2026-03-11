@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EmployeeListApp extends StatelessWidget {
-  const EmployeeListApp({Key? key}) : super(key: key);
+  const EmployeeListApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class Employee {
 }
 
 class EmployeePage extends StatefulWidget {
-  const EmployeePage({Key? key}) : super(key: key);
+  const EmployeePage({super.key});
 
   @override
   State<EmployeePage> createState() => _EmployeePageState();
@@ -155,7 +155,7 @@ class _EmployeePageState extends State<EmployeePage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),

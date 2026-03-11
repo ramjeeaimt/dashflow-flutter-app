@@ -6,7 +6,7 @@ import 'package:flutter_application_difmo/pages/onboarding_screen.dart';
 import 'package:flutter_application_difmo/pages/homepage.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

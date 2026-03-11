@@ -178,7 +178,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         ? Theme.of(context).primaryColor
                                         : Theme.of(
                                             context,
-                                          ).primaryColor.withOpacity(0.3),
+                                          ).primaryColor.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),

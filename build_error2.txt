@@ -1,0 +1,29 @@
+Running Gradle task 'assembleDebug'...                          
+/C:/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/google_fonts-4.0.4/lib/src/google_fonts_variant.dart:150:42: Error: Constant evaluation error:
+const _fontWeightToFilenameWeightParts = {
+                                         ^
+/C:/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/google_fonts-4.0.4/lib/src/google_fonts_variant.dart:151:14: Context: The key 'FontWeight {value: 100}' does not have a primitive operator '=='.
+ - 'FontWeight' is from 'dart:ui'.
+  FontWeight.w100: 'Thin',
+             ^
+/C:/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/google_fonts-4.0.4/lib/src/google_fonts_variant.dart:150:7: Context: While analyzing:
+const _fontWeightToFilenameWeightParts = {
+      ^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Flutter\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 34s
+Running Gradle task 'assembleDebug'...                             34.6s
+Gradle task assembleDebug failed with exit code 1

@@ -8,7 +8,6 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_difmo/pages/auth_screens/login_screen.dart';
 import 'package:flutter_application_difmo/pages/attendance_history_page.dart';
-import 'package:flutter_application_difmo/pages/onboarding_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_application_difmo/pages/location_page.dart';
 
@@ -319,7 +318,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 8,
                                     ),
                                   ],
@@ -502,7 +501,7 @@ class _DashboardPageState extends State<DashboardPage> {
           if (isPopUpVisible)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.3), // Optional background dim
+                color: Colors.black.withValues(alpha: 0.3), // Optional background dim
                 alignment: Alignment.center,
                 child: LocationPopup(
                   isCheckIn: attendanceStatus == "Clock-In",
@@ -539,7 +538,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF36617E).withOpacity(0.1),
+                color: const Color(0xFF36617E).withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: const Icon(Iconsax.clock, color: Color(0xFF36617E)),
@@ -619,7 +618,7 @@ class ActionIcon extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF36617E).withOpacity(0.1), // Primary Light
+              color: const Color(0xFF36617E).withValues(alpha: 0.1), // Primary Light
               borderRadius: BorderRadius.circular(15),
             ),
             child: Icon(icon, color: const Color(0xFF36617E), size: 25),
