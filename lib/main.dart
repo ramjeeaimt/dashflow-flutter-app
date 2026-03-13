@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_application_difmo/pages/splash_screen.dart';
+import 'package:flutter_application_difmo/core/setup/splash_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

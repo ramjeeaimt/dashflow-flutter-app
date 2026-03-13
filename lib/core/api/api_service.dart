@@ -1,0 +1,298 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_application_difmo/main.dart';
+import 'package:flutter_application_difmo/features/auth/pages/login_screen.dart';
+import 'package:logger/logger.dart';
+
+class ApiService {
+  static final Logger _logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 0, 
+      errorMethodCount: 5, 
+      lineLength: 80, 
+      colors: true, 
+      printEmojis: true, 
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+    ),
+  );
+  // Use 10.0.2.2 for Android emulator to access host localhost
+  // Use your machine's IP address for physical device
+  // static const String baseUrl = 'http://10.0.2.2:5000';
+  static const String baseUrl = 'https://difmo-crm-backend.vercel.app';
+
+  static void _logRequest(
+    String method,
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+  }) {
+    _logger.i('🌐 [API REQUEST]\nMETHOD: $method\nURL: $uri${headers != null ? '\nHEADERS: $headers' : ''}${body != null ? '\nBODY: $body' : ''}');
+  }
+
+  static void _logResponse(String method, Uri uri, http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      _logger.i('✅ [API RESPONSE SUCCESS]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}');
+    } else {
+      _logger.w('⚠️ [API RESPONSE FAILED]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}');
+    }
+  }
+
+  static Future<Map<String, String>> _getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  static dynamic _extractData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+      var innerData = responseData['data'];
+      if (innerData is Map<String, dynamic> && innerData.containsKey('data')) {
+        return innerData['data'];
+      }
+      return innerData;
+    }
+    return responseData;
+  }
+
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
+    final url = Uri.parse('$baseUrl/auth/login');
+    final body = jsonEncode({'email': email, 'password': password});
+
+    _logRequest(
+      'POST',
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      _logResponse('POST', url, response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData) as Map<String, dynamic>;
+
+        // Save token and user data
+        final prefs = await SharedPreferences.getInstance();
+        if (data['access_token'] != null) {
+          await prefs.setString('token', data['access_token']);
+        }
+        if (data['user'] != null) {
+          await prefs.setString('user', jsonEncode(data['user']));
+        }
+        return data; // Return the inner data object which contains user info
+      } else {
+        String errorMessage = 'Login failed';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          } else {
+            errorMessage = response.body;
+          }
+        } catch (_) {
+          errorMessage = response.body;
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] login: $e');
+      // Rethrow cleanly if it's already an exception we created
+      if (e.toString().startsWith('Exception: ')) {
+        throw Exception(e.toString().replaceAll('Exception: ', ''));
+      }
+      throw Exception('Login error: $e');
+    }
+  }
+
+  static Future<void> _handleUnauthorized(http.Response response) async {
+    if (response.statusCode == 401) {
+      _logger.w('⚠️ [AUTH] 401 Unauthorized - Logging out...');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  static Future<Map<String, dynamic>> checkIn(
+    String employeeId,
+    double latitude,
+    double longitude,
+    String location,
+    String notes,
+  ) async {
+    final url = Uri.parse('$baseUrl/attendance/check-in');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'employeeId': employeeId,
+      'latitude': latitude,
+      'longitude': longitude,
+      'location': location,
+      'notes': notes,
+    });
+
+    _logRequest('POST', url, headers: headers, body: body);
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        return _extractData(responseData) as Map<String, dynamic>;
+      } else {
+        throw Exception('Check-in failed: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] checkIn: $e');
+      throw Exception('Check-in error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> checkOut(
+    String attendanceId,
+    double latitude,
+    double longitude,
+    String notes,
+  ) async {
+    final url = Uri.parse('$baseUrl/attendance/check-out');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'attendanceId': attendanceId,
+      'latitude': latitude,
+      'longitude': longitude,
+      'notes': notes,
+    });
+
+    _logRequest('POST', url, headers: headers, body: body);
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        return _extractData(responseData) as Map<String, dynamic>;
+      } else {
+        throw Exception('Check-out failed: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] checkOut: $e');
+      throw Exception('Check-out error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getTodayAttendance(
+    String employeeId,
+  ) async {
+    final url = Uri.parse('$baseUrl/attendance/today/$employeeId');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        return data as Map<String, dynamic>?;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getTodayAttendance: $e');
+      // debugPrint('Error fetching today attendance: $e');
+      return null;
+    }
+  }
+
+  static Future<List<dynamic>> getEmployees({String? userId}) async {
+    String queryString = '';
+    if (userId != null) {
+      queryString = '?userId=$userId';
+    }
+    final url = Uri.parse('$baseUrl/employees$queryString');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to fetch employees');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getEmployees: $e');
+      throw Exception('Get employees error: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getAttendanceHistory(
+    String employeeId, {
+    String? startDate,
+    String? endDate,
+    String? status,
+  }) async {
+    String queryString = 'employeeId=$employeeId';
+    if (startDate != null) queryString += '&startDate=$startDate';
+    if (endDate != null) queryString += '&endDate=$endDate';
+    if (status != null && status != 'all') queryString += '&status=$status';
+
+    final url = Uri.parse('$baseUrl/attendance?$queryString');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to fetch attendance history');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getAttendanceHistory: $e');
+      return [];
+    }
+  }
+}
