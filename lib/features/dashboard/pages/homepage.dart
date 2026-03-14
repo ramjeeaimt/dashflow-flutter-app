@@ -13,6 +13,7 @@ import 'package:flutter_application_difmo/features/employees/components/team_sta
 import 'package:flutter_application_difmo/features/employees/pages/employees_list_screen.dart';
 import 'package:flutter_application_difmo/features/payslip/pages/payslip_list_screen.dart';
 import 'package:flutter_application_difmo/features/leaves/pages/leaves_screen.dart';
+import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -46,6 +47,9 @@ class _DashboardPageState extends State<DashboardPage> {
   String currentDate = "";
   String currentTime = "";
 
+  DateTime? checkInDateTime;
+  DateTime? checkOutDateTime;
+
   // Activity History
   List<dynamic> activityHistory = [];
   Timer? _timer;
@@ -72,6 +76,13 @@ class _DashboardPageState extends State<DashboardPage> {
       setState(() {
         currentDate = DateFormat('EEEE, dd MMMM').format(now);
         currentTime = DateFormat('hh:mm:ss a').format(now);
+
+        if (attendanceStatus == "Clock-Out" && checkInDateTime != null) {
+          final duration = now.difference(checkInDateTime!);
+          final hours = duration.inHours;
+          final minutes = duration.inMinutes.remainder(60);
+          workingHours = "${hours}h ${minutes}m (Live)";
+        }
       });
     }
   }
@@ -133,6 +144,9 @@ class _DashboardPageState extends State<DashboardPage> {
             DateTime? checkOut = _parseUtcTime(date, checkOutStr);
 
             setState(() {
+              checkInDateTime = checkIn;
+              checkOutDateTime = checkOut;
+
               if (checkIn != null) {
                 clockInTime = DateFormat('hh:mm a').format(checkIn);
               }
@@ -153,6 +167,8 @@ class _DashboardPageState extends State<DashboardPage> {
             });
           } else {
             setState(() {
+              checkInDateTime = null;
+              checkOutDateTime = null;
               attendanceStatus = "Clock-In";
               clockInTime = "--:--";
               clockOutTime = "--:--";
@@ -187,6 +203,214 @@ class _DashboardPageState extends State<DashboardPage> {
         (route) => false,
       );
     }
+  }
+
+  void _handleAttendanceClick() async {
+    if (employeeId == null) {
+      showSnack("Please wait while we load your profile...");
+      return;
+    }
+
+    if (attendanceStatus == "Completed") {
+      showSnack("Attendance already completed for today");
+      return;
+    }
+
+    if (attendanceStatus == "Clock-Out") {
+      // Show confirmation dialog before checking out
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text("End Work Day?", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF36617E))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Are you sure you want to checkout?\n\nYou won't be able to check in again today.", style: TextStyle(fontSize: 14)),
+                const SizedBox(height: 15),
+                Text("Working Time: $workingHours", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF36617E),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text("Check Out", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        }
+      );
+
+      if (confirm != true) {
+        return; 
+      }
+    }
+
+    // Set loading so user can't tap it multiple times while location permissions load
+    setState(() {
+      isLoading = true;
+    });
+
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      // Directly navigate
+      if (context.mounted) {
+        String preStatus = attendanceStatus;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LocationConfirmPage(
+              isCheckIn: attendanceStatus == "Clock-In",
+              employeeId: employeeId,
+              attendanceId: attendanceId,
+            ),
+          ),
+        );
+        // fetch status when we return
+        await _fetchAttendanceStatus();
+        
+        // Show celebration if just checked out
+        if (preStatus == "Clock-Out" && attendanceStatus == "Completed" && mounted) {
+           showSnack("🎉 Workday completed. Total Working Time: $workingHours");
+        }
+      }
+    } else {
+      setState(() {
+        isLoading = false; // Reset loading so they can interact again
+        isPopUpVisible = true;
+      });
+    }
+  }
+
+  Widget _buildAttendanceButton() {
+    String btnText = "Check In";
+    IconData btnIcon = Icons.location_on;
+    Color iconColor = const Color(0xFF36617E);
+    String subText = "Tap to start your work day";
+
+    if (isLoading) {
+      btnText = "Loading...";
+      subText = "Please wait";
+    } else if (attendanceStatus == "Clock-Out") {
+      btnText = "Check Out";
+      btnIcon = Icons.stop_circle_outlined;
+      iconColor = Colors.orange.shade800;
+      subText = "End your work day";
+    } else if (attendanceStatus == "Completed") {
+      btnText = "Work Completed";
+      btnIcon = Icons.check_circle_outline;
+      iconColor = Colors.green;
+      subText = "You've checked out for today";
+    }
+
+    return GestureDetector(
+      onTap: isLoading || attendanceStatus == "Completed" ? null : _handleAttendanceClick,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Opacity(
+          opacity: (isLoading || attendanceStatus == "Completed") ? 0.6 : 1.0,
+          child: Column(
+            children: [
+              if (isLoading)
+                const SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF36617E),
+                    strokeWidth: 3,
+                  ),
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                     Icon(btnIcon, color: iconColor, size: 28),
+                     const SizedBox(width: 8),
+                     Text(
+                       btnText,
+                       style: TextStyle(
+                         color: iconColor,
+                         fontWeight: FontWeight.bold,
+                         fontSize: 20,
+                       ),
+                     ),
+                  ],
+                ),
+              if (!isLoading)
+                const SizedBox(height: 6),
+              if (!isLoading)
+                Text(
+                  subText,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    double hoursWorked = 0;
+    if (checkInDateTime != null) {
+        final now = attendanceStatus == "Completed" && checkOutDateTime != null ? checkOutDateTime! : DateTime.now();
+        final duration = now.difference(checkInDateTime!);
+        hoursWorked = math.max(0, duration.inMinutes / 60.0);
+    }
+    
+    double progress = (hoursWorked / 8.0).clamp(0.0, 1.0);
+    int h = hoursWorked.floor();
+    int m = ((hoursWorked - h) * 60).round();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+               const Text("Daily Progress", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+               Text("${h}h ${m}m / 8h", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+             ],
+           ),
+           const SizedBox(height: 8),
+           ClipRRect(
+             borderRadius: BorderRadius.circular(10),
+             child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withOpacity(0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(progress >= 1.0 ? Colors.greenAccent : Colors.white),
+                minHeight: 8,
+             ),
+           ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -277,114 +501,12 @@ class _DashboardPageState extends State<DashboardPage> {
                               currentDate,
                               style: const TextStyle(color: Colors.white70),
                             ),
-                            const SizedBox(height: 15),
-                            GestureDetector(
-                              onTap: isLoading
-                                  ? null
-                                  : () async {
-                                      if (employeeId == null) {
-                                        showSnack(
-                                          "Please wait while we load your profile...",
-                                        );
-                                        return;
-                                      }
-
-                                      if (attendanceStatus == "Completed") {
-                                        showSnack(
-                                          "Attendance already completed for today",
-                                        );
-                                        return;
-                                      }
-
-                                      final permission =
-                                          await Geolocator.checkPermission();
-                                      if (permission ==
-                                              LocationPermission.whileInUse ||
-                                          permission ==
-                                              LocationPermission.always) {
-                                        // Directly navigate
-                                        if (context.mounted) {
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  LocationConfirmPage(
-                                                    isCheckIn:
-                                                        attendanceStatus ==
-                                                        "Clock-In",
-                                                    employeeId: employeeId,
-                                                    attendanceId: attendanceId,
-                                                  ),
-                                            ),
-                                          );
-                                          _fetchAttendanceStatus();
-                                        }
-                                      } else {
-                                        setState(() {
-                                          isPopUpVisible = true;
-                                        });
-                                      }
-                                    },
-
-                              child: Container(
-                                width: 150,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(25),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Opacity(
-                                  opacity:
-                                      (isLoading ||
-                                          attendanceStatus == "Completed")
-                                      ? 0.5
-                                      : 1.0,
-                                  child: Column(
-                                    children: [
-                                      if (isLoading)
-                                        const SizedBox(
-                                          height: 50,
-                                          width: 50,
-                                          child: CircularProgressIndicator(
-                                            color: Color(0xFF36617E),
-                                            strokeWidth: 3,
-                                          ),
-                                        )
-                                      else
-                                        const Icon(
-                                          Iconsax.finger_scan,
-                                          size: 50,
-                                          color: Color(0xFF36617E),
-                                        ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        isLoading
-                                            ? "Loading..."
-                                            : attendanceStatus,
-                                        style: const TextStyle(
-                                          color: Color(0xFF36617E),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                            const SizedBox(height: 20),
+                            _buildAttendanceButton(),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 25),
 
                       // Time Info
                       Row(
@@ -395,6 +517,11 @@ class _DashboardPageState extends State<DashboardPage> {
                           TimeInfo(title: "Working Hrs", time: workingHours),
                         ],
                       ),
+                      
+                      if (checkInDateTime != null) ...[
+                        const SizedBox(height: 20),
+                        _buildProgressBar(),
+                      ],
                     ],
                   ),
                 ),

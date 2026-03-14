@@ -189,12 +189,50 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
     // Listen to provider changes for SnackBar feedback and Navigation
     ref.listen<ApiState>(locationActionProvider, (previous, next) {
       if (next.status == ApiStatus.success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(next.message ?? "Success")));
-        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 10),
+                Text(next.message ?? "Success", style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          )
+        );
+        Navigator.pop(context, true);
       } else if (next.status == ApiStatus.error) {
-        _showErrorDialog(context, next.message ?? "An error occurred");
+        String msg = next.message ?? "An error occurred";
+        
+        // 1. Gracefully handle the confusing "Already checked in" API response
+        if (msg.toLowerCase().contains("already checked in")) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+               content: const Row(
+                 children: [
+                   Icon(Icons.info_outline, color: Colors.white),
+                   SizedBox(width: 10),
+                   Text("You are already checked in for today.", style: TextStyle(fontWeight: FontWeight.bold)),
+                 ],
+               ),
+               backgroundColor: Colors.blue.shade600, // Not scary red
+               behavior: SnackBarBehavior.floating,
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+             )
+           );
+           Navigator.pop(context, true); // Pop back to dashboard to refresh UI state
+           
+        // 2. Gracefully handle no internet
+        } else if (msg.toLowerCase().contains("socketexception") || msg.toLowerCase().contains("failed host lookup") || msg.toLowerCase().contains("network error")) {
+           _showErrorDialog(context, "No internet connection. Please check your network and try again.");
+           
+        // 3. General error
+        } else {
+           _showErrorDialog(context, msg);
+        }
       }
     });
 
