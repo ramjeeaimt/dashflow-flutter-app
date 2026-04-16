@@ -1,7 +1,7 @@
 // pages/onboarding_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/features/auth/pages/login_screen.dart';
+import 'package:dashflow/features/auth/pages/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

@@ -5,7 +5,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_application_difmo/core/api/api_provider.dart';
+import 'package:dashflow/core/api/api_provider.dart';
 
 const kGoogleApiKey =
     "AIzaSyClF12i0eHy7Nrig6EYu8Z4U5DA2zC09OI"; // 🔑 Replace with your key

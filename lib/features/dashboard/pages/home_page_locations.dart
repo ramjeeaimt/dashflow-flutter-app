@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/features/activities/pages/location_page.dart';
+import 'package:dashflow/features/activities/pages/location_page.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationPopup extends StatefulWidget {

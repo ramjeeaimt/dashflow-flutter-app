@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_application_difmo/core/api/api_service.dart';
+import 'package:dashflow/core/api/api_service.dart';
 
 enum ApiStatus { initial, loading, success, error }
 

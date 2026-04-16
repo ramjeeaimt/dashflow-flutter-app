@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/features/auth/pages/account_activate_screen.dart';
-import 'package:flutter_application_difmo/features/auth/pages/forgot_password_screen.dart';
-import 'package:flutter_application_difmo/core/api/api_service.dart';
-import 'package:flutter_application_difmo/shared/components/bottom_bar.dart';
+import 'package:dashflow/features/auth/pages/account_activate_screen.dart';
+import 'package:dashflow/features/auth/pages/forgot_password_screen.dart';
+import 'package:dashflow/core/api/api_service.dart';
+import 'package:dashflow/shared/components/bottom_bar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Image.asset('assets/images/logo.png', height: 70),
                   const SizedBox(height: 10),
                   const Text(
-                    'Difmo CRM',
+                    'Dashflow',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_application_difmo/core/setup/splash_screen.dart';
+import 'package:dashflow/core/setup/splash_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Difmo CRM',
+      title: 'Dashflow',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

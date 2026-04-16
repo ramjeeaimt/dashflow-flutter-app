@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/features/dashboard/pages/home_page_locations.dart';
+import 'package:dashflow/features/dashboard/pages/home_page_locations.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:flutter_application_difmo/core/api/api_service.dart';
+import 'package:dashflow/core/api/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:intl/intl.dart';
-import 'package:flutter_application_difmo/features/auth/pages/login_screen.dart';
+import 'package:dashflow/features/auth/pages/login_screen.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_application_difmo/features/activities/pages/location_page.dart';
-import 'package:flutter_application_difmo/features/employees/components/team_status_widget.dart';
-import 'package:flutter_application_difmo/features/employees/pages/employees_list_screen.dart';
-import 'package:flutter_application_difmo/features/payslip/pages/payslip_list_screen.dart';
-import 'package:flutter_application_difmo/features/leaves/pages/leaves_screen.dart';
+import 'package:dashflow/features/activities/pages/location_page.dart';
+
+import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
+import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
+import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
@@ -223,37 +223,62 @@ class _DashboardPageState extends State<DashboardPage> {
         builder: (context) {
           return AlertDialog(
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text("End Work Day?", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF36617E))),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "End Work Day?",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF36617E),
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Are you sure you want to checkout?\n\nYou won't be able to check in again today.", style: TextStyle(fontSize: 14)),
+                const Text(
+                  "Are you sure you want to checkout?\n\nYou won't be able to check in again today.",
+                  style: TextStyle(fontSize: 14),
+                ),
                 const SizedBox(height: 15),
-                Text("Working Time: $workingHours", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  "Working Time: $workingHours",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF36617E),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                child: const Text("Check Out", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "Check Out",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           );
-        }
+        },
       );
 
       if (confirm != true) {
-        return; 
+        return;
       }
     }
 
@@ -263,7 +288,8 @@ class _DashboardPageState extends State<DashboardPage> {
     });
 
     final permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
       // Directly navigate
       if (context.mounted) {
         String preStatus = attendanceStatus;
@@ -279,10 +305,12 @@ class _DashboardPageState extends State<DashboardPage> {
         );
         // fetch status when we return
         await _fetchAttendanceStatus();
-        
+
         // Show celebration if just checked out
-        if (preStatus == "Clock-Out" && attendanceStatus == "Completed" && mounted) {
-           showSnack("🎉 Workday completed. Total Working Time: $workingHours");
+        if (preStatus == "Clock-Out" &&
+            attendanceStatus == "Completed" &&
+            mounted) {
+          showSnack("🎉 Workday completed. Total Working Time: $workingHours");
         }
       }
     } else {
@@ -315,7 +343,9 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     return GestureDetector(
-      onTap: isLoading || attendanceStatus == "Completed" ? null : _handleAttendanceClick,
+      onTap: isLoading || attendanceStatus == "Completed"
+          ? null
+          : _handleAttendanceClick,
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -348,20 +378,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                     Icon(btnIcon, color: iconColor, size: 28),
-                     const SizedBox(width: 8),
-                     Text(
-                       btnText,
-                       style: TextStyle(
-                         color: iconColor,
-                         fontWeight: FontWeight.bold,
-                         fontSize: 20,
-                       ),
-                     ),
+                    Icon(btnIcon, color: iconColor, size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      btnText,
+                      style: TextStyle(
+                        color: iconColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
                   ],
                 ),
-              if (!isLoading)
-                const SizedBox(height: 6),
+              if (!isLoading) const SizedBox(height: 6),
               if (!isLoading)
                 Text(
                   subText,
@@ -377,11 +406,13 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildProgressBar() {
     double hoursWorked = 0;
     if (checkInDateTime != null) {
-        final now = attendanceStatus == "Completed" && checkOutDateTime != null ? checkOutDateTime! : DateTime.now();
-        final duration = now.difference(checkInDateTime!);
-        hoursWorked = math.max(0, duration.inMinutes / 60.0);
+      final now = attendanceStatus == "Completed" && checkOutDateTime != null
+          ? checkOutDateTime!
+          : DateTime.now();
+      final duration = now.difference(checkInDateTime!);
+      hoursWorked = math.max(0, duration.inMinutes / 60.0);
     }
-    
+
     double progress = (hoursWorked / 8.0).clamp(0.0, 1.0);
     int h = hoursWorked.floor();
     int m = ((hoursWorked - h) * 60).round();
@@ -391,23 +422,34 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Row(
-             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-             children: [
-               const Text("Daily Progress", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-               Text("${h}h ${m}m / 8h", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-             ],
-           ),
-           const SizedBox(height: 8),
-           ClipRRect(
-             borderRadius: BorderRadius.circular(10),
-             child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(progress >= 1.0 ? Colors.greenAccent : Colors.white),
-                minHeight: 8,
-             ),
-           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Daily Progress",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                "${h}h ${m}m / 8h",
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress >= 1.0 ? Colors.greenAccent : Colors.white,
+              ),
+              minHeight: 8,
+            ),
+          ),
         ],
       ),
     );
@@ -517,7 +559,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           TimeInfo(title: "Working Hrs", time: workingHours),
                         ],
                       ),
-                      
+
                       if (checkInDateTime != null) ...[
                         const SizedBox(height: 20),
                         _buildProgressBar(),
@@ -527,12 +569,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
 
                 const SizedBox(height: 25),
-
-                // Team Status Section
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: TeamStatusWidget(),
-                ),
 
                 const SizedBox(height: 25),
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/core/api/api_service.dart';
+import 'package:dashflow/core/api/api_service.dart';
 import 'package:iconsax/iconsax.dart';
 
 class EmployeesListScreen extends StatefulWidget {

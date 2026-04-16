@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/main.dart';
-import 'package:flutter_application_difmo/features/auth/pages/login_screen.dart';
+import 'package:dashflow/main.dart';
+import 'package:dashflow/features/auth/pages/login_screen.dart';
 import 'package:logger/logger.dart';
 
 class ApiService {

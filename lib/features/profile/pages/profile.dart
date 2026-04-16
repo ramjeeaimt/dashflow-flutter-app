@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_difmo/features/auth/pages/login_screen.dart';
+import 'package:dashflow/features/auth/pages/login_screen.dart';
+import 'dart:convert';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -11,6 +12,50 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String userName = "Loading...";
+  String userRole = "Employee";
+  String department = "IT Department";
+  String employeeId = "---";
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    setState(() => isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user');
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        setState(() {
+          userName = "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
+          if (userName.isEmpty) userName = "User";
+          
+          if (user['roles'] != null && user['roles'].isNotEmpty) {
+            userRole = user['roles'][0]['name'] ?? "Employee";
+          }
+          
+          // Try to get department from user data if it exists
+          if (user['department'] != null) {
+            department = user['department']['name'] ?? "IT Department";
+          } else if (user['branch'] != null) {
+             department = user['branch']['name'] ?? "IT Department";
+          }
+
+          employeeId = user['employeeId'] ?? user['id']?.toString() ?? "---";
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading profile: $e");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -79,9 +124,9 @@ class _ProfilePageState extends State<ProfilePage> {
                      ],
                    ),
                   const SizedBox(height: 15),
-                  const Text(
-                    'Sadhna Kumari',
-                    style: TextStyle(
+                  Text(
+                    isLoading ? "Loading..." : userName,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
                       color: Color(0xFF1F2937),
@@ -89,7 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Employee | IT Department',
+                    isLoading ? "Fetching details..." : '$userRole | $department',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                   const SizedBox(height: 12),
@@ -99,7 +144,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: const Color(0xFF36617E).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text('EMP ID: DIF-1024', style: TextStyle(color: Color(0xFF36617E), fontWeight: FontWeight.bold)),
+                    child: Text(
+                      isLoading ? "---" : 'EMP ID: $employeeId', 
+                      style: const TextStyle(color: Color(0xFF36617E), fontWeight: FontWeight.bold)
+                    ),
                   )
                 ],
               ),

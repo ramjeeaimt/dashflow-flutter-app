@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_difmo/core/setup/onboarding_screen.dart';
-import 'package:flutter_application_difmo/shared/components/bottom_bar.dart';
+import 'package:dashflow/core/setup/onboarding_screen.dart';
+import 'package:dashflow/shared/components/bottom_bar.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -99,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 24),
 
             const Text(
-              "Difmo CRM",
+              "Dashflow",
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,

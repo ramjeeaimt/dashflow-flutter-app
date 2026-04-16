@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_difmo/shared/components/bottom_bar.dart';
+import 'package:dashflow/shared/components/bottom_bar.dart';
 
 class ActivateAccountPage extends StatelessWidget {
   const ActivateAccountPage({super.key});

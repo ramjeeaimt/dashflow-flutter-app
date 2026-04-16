@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:flutter_application_difmo/features/dashboard/pages/homepage.dart';
-import 'package:flutter_application_difmo/features/activities/pages/activity.dart';
-import 'package:flutter_application_difmo/features/projects/pages/projects_tab.dart';
-import 'package:flutter_application_difmo/features/profile/pages/profile.dart';
+import 'package:dashflow/features/dashboard/pages/homepage.dart';
+import 'package:dashflow/features/activities/pages/activity.dart';
+import 'package:dashflow/features/projects/pages/projects_tab.dart';
+import 'package:dashflow/features/profile/pages/profile.dart';
 
 class BottomBarWidget extends StatefulWidget {
   const BottomBarWidget({super.key});
