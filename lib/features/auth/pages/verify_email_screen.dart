@@ -49,7 +49,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          "Difmo CRM",
+          "DashFlow CRM",
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,

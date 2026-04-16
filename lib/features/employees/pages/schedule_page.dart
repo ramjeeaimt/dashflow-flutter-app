@@ -6,7 +6,7 @@ class WeeklyScheduleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Difmo Company Weekly Schedule',
+      title: 'DashFlow Company Weekly Schedule',
       theme: ThemeData(primarySwatch: Colors.pink),
       home: const WeeklySchedulePage(),
       debugShowCheckedModeBanner: false,

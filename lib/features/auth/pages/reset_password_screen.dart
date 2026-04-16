@@ -29,7 +29,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          "Difmo CRM",
+          "DashFlow CRM",
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,

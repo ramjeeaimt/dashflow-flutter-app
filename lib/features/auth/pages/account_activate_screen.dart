@@ -33,7 +33,7 @@ class ActivateAccountPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'Difmo CRM',
+                        'DashFlow CRM',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

@@ -20,9 +20,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-kotlinOptions {
-    jvmTarget = "17"
-}
 
     signingConfigs {
         create("release") {
@@ -40,8 +37,8 @@ kotlinOptions {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 25
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.5"
     }
 
     buildTypes {
