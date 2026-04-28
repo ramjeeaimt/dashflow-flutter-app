@@ -13,6 +13,7 @@ import 'package:dashflow/features/activities/pages/location_page.dart';
 import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
 import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
 import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
+import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
@@ -118,10 +119,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
         setState(() {
           employeeId = userId; // Setting it directly from user data
-          userName = "${user['firstName']} ${user['lastName']}";
-          userEmail = user['email'];
+          userName = _capitalize("${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim());
+          if (userName.isEmpty) userName = "User";
+          userEmail = user['email'] ?? '';
           if (user['roles'] != null && user['roles'].isNotEmpty) {
-            userRole = user['roles'][0]['name'] ?? "Employee";
+            userRole = _capitalize(user['roles'][0]['name'] ?? "Employee");
           }
         });
 
@@ -192,7 +194,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _doLogout() async {
     print("User logging out..."); // Debug log
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -203,6 +205,100 @@ class _DashboardPageState extends State<DashboardPage> {
         (route) => false,
       );
     }
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Iconsax.logout, color: Colors.red.shade400, size: 32),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Logout?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Are you sure you want to logout\nfrom your account?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade500,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 26),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'No',
+                        style: TextStyle(
+                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade400,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Yes, Logout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirmed == true) await _doLogout();
   }
 
   void _handleAttendanceClick() async {
@@ -488,10 +584,21 @@ class _DashboardPageState extends State<DashboardPage> {
                       // Profile
                       Row(
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 25,
-                            backgroundImage: AssetImage(
-                              "assets/images/ranjeet.jpg",
+                            backgroundColor: Colors.white.withOpacity(0.25),
+                            child: Text(
+                              userName
+                                  .split(' ')
+                                  .where((w) => w.isNotEmpty)
+                                  .take(2)
+                                  .map((w) => w[0].toUpperCase())
+                                  .join(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -622,7 +729,21 @@ class _DashboardPageState extends State<DashboardPage> {
                       ActionIcon(
                         icon: Iconsax.calendar_tick,
                         label: "Attendance",
-                        onTap: () => showSnack("Attendance clicked"),
+                        onTap: () {
+                          if (employeeId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AttendanceHistoryPage(
+                                  employeeId: employeeId!,
+                                  userName: userName,
+                                ),
+                              ),
+                            );
+                          } else {
+                            showSnack("Loading profile, please wait...");
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -787,29 +908,52 @@ class _DashboardPageState extends State<DashboardPage> {
                           final dateStr = history['date'] ?? '';
                           String formattedDate = dateStr;
                           try {
-                            if (dateStr.contains('T')) {
-                              final dt = DateTime.parse(dateStr);
-                              formattedDate = DateFormat(
-                                'dd MMM yyyy',
-                              ).format(dt);
-                            }
+                            final rawDate = dateStr.contains('T')
+                                ? dateStr.split('T')[0]
+                                : dateStr;
+                            formattedDate = DateFormat('dd MMM yyyy')
+                                .format(DateTime.parse(rawDate));
                           } catch (_) {}
 
-                          // Format time
-                          String timeStr = history['checkInTime'] ?? '--:--';
-                          try {
-                            if (timeStr != '--:--' && dateStr.contains('T')) {
-                              final isoStr =
-                                  "${dateStr.split('T')[0]}T$timeStr";
-                              final dt = DateTime.parse(isoStr);
-                              timeStr = DateFormat('hh:mm a').format(dt);
+                          // Helper: parse time from date + time strings
+                          DateTime? parseTime(String? tStr) {
+                            if (tStr == null || tStr.isEmpty) return null;
+                            try {
+                              final d = dateStr.contains('T')
+                                  ? dateStr.split('T')[0]
+                                  : dateStr;
+                              return DateTime.parse('${d}T$tStr');
+                            } catch (_) {
+                              return null;
                             }
-                          } catch (_) {}
+                          }
 
-                          return activityItem(
-                            "Clock In",
+                          final checkIn = parseTime(history['checkInTime']);
+                          final checkOut = parseTime(history['checkOutTime']);
+
+                          final checkInFmt = checkIn != null
+                              ? DateFormat('hh:mm a').format(checkIn)
+                              : '--:--';
+                          final checkOutFmt = checkOut != null
+                              ? DateFormat('hh:mm a').format(checkOut)
+                              : '--:--';
+
+                          String workHrs = '--';
+                          if (checkIn != null && checkOut != null) {
+                            final dur = checkOut.difference(checkIn);
+                            workHrs =
+                                '${dur.inHours}h ${dur.inMinutes.remainder(60)}m';
+                          }
+
+                          final status =
+                              (history['status'] ?? 'present').toString();
+
+                          return _buildHistoryCard(
                             formattedDate,
-                            timeStr,
+                            checkInFmt,
+                            checkOutFmt,
+                            workHrs,
+                            status,
                           );
                         }),
                     ],
@@ -846,57 +990,179 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Reusable Activity Item
-  Widget activityItem(String title, String date, String time) {
-    return InkWell(
-      onTap: () => showSnack("$title tapped"),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF36617E).withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
+  /// Dynamic attendance history card showing Check-In, Check-Out, Hours & status
+  Widget _buildHistoryCard(
+    String date,
+    String checkIn,
+    String checkOut,
+    String workHrs,
+    String status,
+  ) {
+    Color statusColor;
+    switch (status.toLowerCase()) {
+      case 'present':
+        statusColor = Colors.green;
+        break;
+      case 'absent':
+        statusColor = Colors.red;
+        break;
+      case 'late':
+        statusColor = Colors.orange;
+        break;
+      case 'half_day':
+        statusColor = Colors.purple;
+        break;
+      default:
+        statusColor = Colors.blue;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Date row + status badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF36617E).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Iconsax.calendar_1,
+                      color: Color(0xFF36617E),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ],
               ),
-              child: const Icon(Iconsax.clock, color: Color(0xFF36617E)),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    letterSpacing: 0.5,
                   ),
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Check-In / Check-Out / Working Hours row
+          Row(
+            children: [
+              _buildTimePill(
+                icon: Iconsax.login,
+                label: 'Check In',
+                time: checkIn,
+                color: Colors.green,
+              ),
+              const SizedBox(width: 8),
+              _buildTimePill(
+                icon: Iconsax.logout,
+                label: 'Check Out',
+                time: checkOut,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              _buildTimePill(
+                icon: Iconsax.clock,
+                label: 'Hours',
+                time: workHrs,
+                color: Colors.blue,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimePill({
+    required IconData icon,
+    required String label,
+    required String time,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 12, color: color),
+                const SizedBox(width: 3),
                 Text(
-                  date,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 4),
             Text(
               time,
-              style: const TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: color,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Capitalizes each word in a string
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text
+        .split(' ')
+        .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase())
+        .join(' ');
   }
 
   // Task item widget

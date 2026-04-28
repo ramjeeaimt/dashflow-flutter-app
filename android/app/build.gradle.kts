@@ -37,8 +37,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 25
         targetSdk = 35
-        versionCode = 25
-        versionName = "1.0.24"
+        versionCode = 28
+        versionName = "1.0.27"
     }
 
     buildTypes {

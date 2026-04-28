@@ -32,18 +32,20 @@ class _ProfilePageState extends State<ProfilePage> {
       if (userStr != null) {
         final user = jsonDecode(userStr);
         setState(() {
-          userName = "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim();
+          final firstName = user['firstName'] ?? '';
+          final lastName = user['lastName'] ?? '';
+          userName = "${_capitalize(firstName)} ${_capitalize(lastName)}".trim();
           if (userName.isEmpty) userName = "User";
           
           if (user['roles'] != null && user['roles'].isNotEmpty) {
-            userRole = user['roles'][0]['name'] ?? "Employee";
+            userRole = _capitalize(user['roles'][0]['name'] ?? "Employee");
           }
           
           // Try to get department from user data if it exists
           if (user['department'] != null) {
-            department = user['department']['name'] ?? "IT Department";
+            department = _capitalize(user['department']['name'] ?? "IT Department");
           } else if (user['branch'] != null) {
-             department = user['branch']['name'] ?? "IT Department";
+             department = _capitalize(user['branch']['name'] ?? "IT Department");
           }
 
           employeeId = user['employeeId'] ?? user['id']?.toString() ?? "---";
@@ -56,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _doLogout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     if (mounted) {
@@ -65,6 +67,100 @@ class _ProfilePageState extends State<ProfilePage> {
         (route) => false,
       );
     }
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.logout_rounded, color: Colors.red.shade400, size: 32),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Logout?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Are you sure you want to logout\nfrom your account?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade500,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 26),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'No',
+                        style: TextStyle(
+                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade400,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Yes, Logout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirmed == true) await _doLogout();
   }
 
   @override
@@ -107,11 +203,25 @@ class _ProfilePageState extends State<ProfilePage> {
                    Stack(
                      alignment: Alignment.bottomRight,
                      children: [
-                       const CircleAvatar(
-                          radius: 45,
-                          backgroundImage: AssetImage('assets/images/ranjeet.jpg'), // Default user image
-                          backgroundColor: Colors.grey,
-                        ),
+                        CircleAvatar(
+                           radius: 45,
+                           backgroundColor: const Color(0xFF36617E),
+                           child: Text(
+                             isLoading
+                                 ? ''
+                                 : userName
+                                     .split(' ')
+                                     .where((w) => w.isNotEmpty)
+                                     .take(2)
+                                     .map((w) => w[0].toUpperCase())
+                                     .join(),
+                             style: const TextStyle(
+                               color: Colors.white,
+                               fontWeight: FontWeight.bold,
+                               fontSize: 28,
+                             ),
+                           ),
+                         ),
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -285,5 +395,16 @@ class _ProfilePageState extends State<ProfilePage> {
         },
       ),
     );
+  }
+
+  /// Capitalizes the first letter of each word in a string.
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text
+        .split(' ')
+        .map((word) => word.isEmpty
+            ? word
+            : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ');
   }
 }
