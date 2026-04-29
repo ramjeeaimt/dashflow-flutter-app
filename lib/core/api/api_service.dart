@@ -9,18 +9,18 @@ import 'package:logger/logger.dart';
 class ApiService {
   static final Logger _logger = Logger(
     printer: PrettyPrinter(
-      methodCount: 0, 
-      errorMethodCount: 5, 
-      lineLength: 80, 
-      colors: true, 
-      printEmojis: true, 
+      methodCount: 0,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
       dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
   // Use 10.0.2.2 for Android emulator to access host localhost
   // Use your machine's IP address for physical device
   // static const String baseUrl = 'http://10.0.2.2:5000';
-  static const String baseUrl = 'https://difmo-crm-backend-2uwg.onrender.com/api';
+  static const String baseUrl = 'https://dashflow-backend.vercel.app/api';
 
   static void _logRequest(
     String method,
@@ -28,14 +28,20 @@ class ApiService {
     Map<String, String>? headers,
     Object? body,
   }) {
-    _logger.i('🌐 [API REQUEST]\nMETHOD: $method\nURL: $uri${headers != null ? '\nHEADERS: $headers' : ''}${body != null ? '\nBODY: $body' : ''}');
+    _logger.i(
+      '🌐 [API REQUEST]\nMETHOD: $method\nURL: $uri${headers != null ? '\nHEADERS: $headers' : ''}${body != null ? '\nBODY: $body' : ''}',
+    );
   }
 
   static void _logResponse(String method, Uri uri, http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      _logger.i('✅ [API RESPONSE SUCCESS]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}');
+      _logger.i(
+        '✅ [API RESPONSE SUCCESS]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}',
+      );
     } else {
-      _logger.w('⚠️ [API RESPONSE FAILED]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}');
+      _logger.w(
+        '⚠️ [API RESPONSE FAILED]\nMETHOD: $method\nURL: $uri\nSTATUS: ${response.statusCode}\nBODY: ${response.body}',
+      );
     }
   }
 
@@ -49,7 +55,8 @@ class ApiService {
   }
 
   static dynamic _extractData(dynamic responseData) {
-    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+    if (responseData is Map<String, dynamic> &&
+        responseData.containsKey('data')) {
       var innerData = responseData['data'];
       if (innerData is Map<String, dynamic> && innerData.containsKey('data')) {
         return innerData['data'];
