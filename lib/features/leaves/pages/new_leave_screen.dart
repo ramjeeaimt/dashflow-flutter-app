@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class NewLeaveScreen extends StatelessWidget {
+class NewLeaveScreen extends StatefulWidget {
   const NewLeaveScreen({super.key});
+
+  @override
+  State<NewLeaveScreen> createState() => _NewLeaveScreenState();
+}
+
+class _NewLeaveScreenState extends State<NewLeaveScreen> {
+  String selectedLeaveType = "Casual";
+  String leaveCause = "Trip to Cannes";
+  DateTime fromDate = DateTime(2020, 12, 21);
+  TimeOfDay fromTime = const TimeOfDay(hour: 9, minute: 30);
+  DateTime toDate = DateTime(2021, 1, 8);
+  TimeOfDay toTime = const TimeOfDay(hour: 18, minute: 30);
+  DateTime selectedMonth = DateTime(2020, 12);
+
+  int get totalDays => toDate.difference(fromDate).inDays + 1;
 
   @override
   Widget build(BuildContext context) {
@@ -40,53 +56,29 @@ class NewLeaveScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.05),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _buildListItem(
-                          iconPath: Icons.grid_view_rounded,
-                          iconColor: const Color(0xFF5A67D8),
-                          label: "Type",
-                          value: "Casual",
-                        ),
-                        const Divider(height: 1),
-                        _buildListItem(
-                          iconPath: Icons.edit_rounded,
-                          iconColor: const Color(0xFF5A67D8),
-                          label: "Cause",
-                          value: "Trip to Cannes",
-                        ),
-                        const Divider(height: 1),
-                        _buildListItem(
-                          iconPath: Icons.arrow_right_alt,
-                          iconColor: const Color(0xFF5A67D8),
-                          label: "From",
-                          value: "Mon, 21 Dec 2020  9:30 am",
-                        ),
-                        const Divider(height: 1),
-                        _buildTimeAndDatePicker(),
-                        const Divider(height: 1),
-                        _buildListItem(
-                          iconPath: Icons.arrow_right_alt,
-                          iconColor: const Color(0xFF5A67D8),
-                          label: "To",
-                          value: "Fri, 08 Jan 2021  6:30 pm",
-                        ),
-                      ],
-                    ),
+              SingleChildScrollView(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.05),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _buildLeaveTypeSelector(),
+                      const Divider(height: 1),
+                      _buildCauseField(),
+                      const Divider(height: 1),
+                      _buildFromDateTimeSelector(),
+                      const Divider(height: 1),
+                      _buildToDateTimeSelector(),
+                    ],
                   ),
                 ),
               ),
@@ -101,10 +93,10 @@ class NewLeaveScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () {},
-                  child: const Text(
-                    "Apply for 18 Days Leave",
-                    style: TextStyle(
+                  onPressed: _submitLeaveRequest,
+                  child: Text(
+                    "Apply for $totalDays Days Leave",
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -120,12 +112,17 @@ class NewLeaveScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListItem({
-    required IconData iconPath,
-    required Color iconColor,
-    required String label,
-    required String value,
-  }) {
+  void _submitLeaveRequest() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Leave request submitted for $totalDays days!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    Navigator.pop(context);
+  }
+
+  Widget _buildLeaveTypeSelector() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -133,202 +130,232 @@ class NewLeaveScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(iconPath, color: iconColor),
+            child: const Icon(Icons.grid_view_rounded, color: Color(0xFF5A67D8)),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Leave Type",
+                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E202B),
-                ),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeAndDatePicker() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Time",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      "9:30",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Text(
-                            "AM",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: const Text(
-                            "PM",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, color: Colors.grey),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              )
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: const [
-                  Text(
-                    "December 2020",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                  child: DropdownButton<String>(
+                    value: selectedLeaveType,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: ['Casual', 'Sick', 'Earned', 'Maternity'].map((type) {
+                      return DropdownMenuItem(value: type, child: Text(type));
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() => selectedLeaveType = value ?? 'Casual');
+                    },
                   ),
-                  Icon(Icons.keyboard_arrow_down, color: Colors.blue),
-                ],
-              ),
-              Row(
-                children: const [
-                  Icon(Icons.chevron_left, color: Colors.black),
-                  SizedBox(width: 10),
-                  Icon(Icons.chevron_right, color: Colors.black),
-                ],
-              )
-            ],
-          ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-                .map((day) => Expanded(
-                      child: Center(
-                        child: Text(
-                          day,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 10),
-          GridView.count(
-            crossAxisCount: 7,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: _buildCalendarDays(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildCalendarDays() {
-    List<Widget> days = [];
-    int startOffset = 2; // Tue is 1st
-    int currentDay = 1;
-    for (int i = 0; i < 35; i++) {
-      if (i < startOffset) {
-        days.add(const SizedBox());
-      } else if (currentDay <= 31) {
-        bool isSelected = currentDay == 21;
-        days.add(
-          Center(
-            child: Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: isSelected
-                  ? const BoxDecoration(
-                      color: Color(0xFF5A67D8),
-                      shape: BoxShape.circle,
-                    )
-                  : null,
-              child: Text(
-                "$currentDay",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : const Color(0xFF1E202B),
                 ),
-              ),
+              ],
             ),
           ),
-        );
-        currentDay++;
-      } else {
-        days.add(const SizedBox());
-      }
-    }
-    return days;
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCauseField() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.edit_rounded, color: Color(0xFF5A67D8)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Reason",
+                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Enter reason...',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  onChanged: (value) => leaveCause = value,
+                  controller: TextEditingController(text: leaveCause),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFromDateTimeSelector() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "From Date & Time",
+                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: fromDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) setState(() => fromDate = picked);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      DateFormat('MMM dd, yyyy').format(fromDate),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    TimeOfDay? picked = await showTimePicker(
+                      context: context,
+                      initialTime: fromTime,
+                    );
+                    if (picked != null) setState(() => fromTime = picked);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      fromTime.format(context),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToDateTimeSelector() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "To Date & Time",
+                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: toDate,
+                      firstDate: fromDate,
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) setState(() => toDate = picked);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      DateFormat('MMM dd, yyyy').format(toDate),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    TimeOfDay? picked = await showTimePicker(
+                      context: context,
+                      initialTime: toTime,
+                    );
+                    if (picked != null) setState(() => toTime = picked);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      toTime.format(context),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

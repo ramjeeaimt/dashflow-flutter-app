@@ -20,7 +20,7 @@ class ApiService {
   // Use 10.0.2.2 for Android emulator to access host localhost
   // Use your machine's IP address for physical device
   // static const String baseUrl = 'http://10.0.2.2:5000';
-  static const String baseUrl = 'https://dashflow-backend.vercel.app/api';
+  static const String baseUrl = 'http://192.168.1.11:5002';
 
   static void _logRequest(
     String method,

@@ -30,7 +30,7 @@ class _ActivityPageState extends State<ActivityPage> {
     },
     {
       "type": "Lunch Break",
-      "time": "01:00 PM",
+      "time": "01:30 PM to 02:30 PM",
       "status": "Approved",
     },
     {
