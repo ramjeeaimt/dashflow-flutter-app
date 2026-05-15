@@ -130,7 +130,7 @@ class _ProjectsTabState extends State<ProjectsTab> with SingleTickerProviderStat
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-             BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 4)),
+             BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -149,9 +149,9 @@ class _ProjectsTabState extends State<ProjectsTab> with SingleTickerProviderStat
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: priorityColor.withOpacity(0.1),
+                    color: priorityColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: priorityColor.withOpacity(0.5))
+                    border: Border.all(color: priorityColor.withValues(alpha: 0.5))
                   ),
                   child: Text(
                     priority,

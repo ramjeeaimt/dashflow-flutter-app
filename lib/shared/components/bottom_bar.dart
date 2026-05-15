@@ -56,7 +56,7 @@ class _BottomBarWidgetState extends State<BottomBarWidget> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF36617E).withOpacity(0.08),
+                  color: const Color(0xFF36617E).withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

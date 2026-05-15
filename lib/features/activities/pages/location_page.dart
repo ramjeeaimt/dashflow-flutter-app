@@ -110,24 +110,24 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
 
   /// ✅ Confirm button
   Future<void> _confirmLocation() async {
-    print(
+    debugPrint(
       "DEBUG: Confirm clicked. isCheckIn: ${widget.isCheckIn}, EmployeeID: ${widget.employeeId}, AttendanceID: ${widget.attendanceId}",
     );
 
     if (currentPosition == null) {
-      print("DEBUG: currentPosition is null");
+      debugPrint("DEBUG: currentPosition is null");
       return;
     }
 
     if (widget.isCheckIn) {
       if (widget.employeeId == null) {
-        print("DEBUG: EmployeeID is null");
+        debugPrint("DEBUG: EmployeeID is null");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Error: Employee ID not found")),
         );
         return;
       }
-      print("DEBUG: Calling checkIn...");
+      debugPrint("DEBUG: Calling checkIn...");
       await ref
           .read(locationActionProvider.notifier)
           .checkIn(
@@ -137,16 +137,16 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
             address,
             "", // notes
           );
-      print("DEBUG: checkIn called");
+      debugPrint("DEBUG: checkIn called");
     } else {
       if (widget.attendanceId == null) {
-        print("DEBUG: AttendanceID is null");
+        debugPrint("DEBUG: AttendanceID is null");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Error: Attendance ID not found")),
         );
         return;
       }
-      print("DEBUG: Calling checkOut...");
+      debugPrint("DEBUG: Calling checkOut...");
       await ref
           .read(locationActionProvider.notifier)
           .checkOut(
@@ -155,7 +155,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
             currentPosition!.longitude,
             "", // notes
           );
-      print("DEBUG: checkOut called");
+      debugPrint("DEBUG: checkOut called");
     }
   }
 

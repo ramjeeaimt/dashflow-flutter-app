@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dashflow/core/setup/splash_screen.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 
@@ -20,7 +18,7 @@ void main() async {
         AndroidMapRenderer.latest,
       );
     } catch (e) {
-      print("Renderer initialization failed: $e");
+      debugPrint("Renderer initialization failed: $e");
     }
   }
   runApp(const ProviderScope(child: MyApp()));

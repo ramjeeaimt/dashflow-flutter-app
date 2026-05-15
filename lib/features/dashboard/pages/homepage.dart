@@ -9,11 +9,10 @@ import 'package:intl/intl.dart';
 import 'package:dashflow/features/auth/pages/login_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dashflow/features/activities/pages/location_page.dart';
-
-import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
-import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
-import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
-import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
+// import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
+// import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
+// import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
+// import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
@@ -100,7 +99,7 @@ class _DashboardPageState extends State<DashboardPage> {
       // debugPrint("Parsed $isoStr to $dt");
       return dt;
     } catch (e) {
-      print("Error parsing time: $e");
+      debugPrint("Error parsing time: $e");
       return null;
     }
   }
@@ -119,7 +118,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
         setState(() {
           employeeId = userId; // Setting it directly from user data
-          userName = _capitalize("${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim());
+          userName = _capitalize(
+            "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
+          );
           if (userName.isEmpty) userName = "User";
           userEmail = user['email'] ?? '';
           if (user['roles'] != null && user['roles'].isNotEmpty) {
@@ -130,15 +131,15 @@ class _DashboardPageState extends State<DashboardPage> {
         // Get today's attendance using the assigned employeeId
         if (employeeId != null) {
           final attendance = await ApiService.getTodayAttendance(employeeId!);
-          print("RAW ATTENDANCE DATA: $attendance"); // DEBUG LOG
+          debugPrint("RAW ATTENDANCE DATA: $attendance"); // DEBUG LOG
 
           if (attendance != null) {
             String? date = attendance['date'];
             String? checkInStr = attendance['checkInTime'];
             String? checkOutStr = attendance['checkOutTime'];
 
-            print("ID: ${attendance['id']}"); // DEBUG LOG
-            print(
+            debugPrint("ID: ${attendance['id']}"); // DEBUG LOG
+            debugPrint(
               "Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr",
             ); // DEBUG LOG
 
@@ -164,7 +165,7 @@ class _DashboardPageState extends State<DashboardPage> {
               } else {
                 attendanceStatus = "Clock-Out";
                 attendanceId = attendance['id'];
-                print("Set attendanceId to $attendanceId"); // DEBUG LOG
+                debugPrint("Set attendanceId to $attendanceId"); // DEBUG LOG
               }
             });
           } else {
@@ -186,7 +187,7 @@ class _DashboardPageState extends State<DashboardPage> {
         }
       }
     } catch (e) {
-      print("Error fetching attendance: $e");
+      debugPrint("Error fetching attendance: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -195,10 +196,10 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _doLogout() async {
-    print("User logging out..."); // Debug log
+    debugPrint("User logging out..."); // Debug log
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    print("SharedPreferences cleared.");
+    debugPrint("SharedPreferences cleared.");
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -225,7 +226,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   color: Colors.red.shade50,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Iconsax.logout, color: Colors.red.shade400, size: 32),
+                child: Icon(
+                  Iconsax.logout,
+                  color: Colors.red.shade400,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 18),
               const Text(
@@ -253,7 +258,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(ctx).pop(false),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -451,7 +459,7 @@ class _DashboardPageState extends State<DashboardPage> {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -539,7 +547,7 @@ class _DashboardPageState extends State<DashboardPage> {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
                 progress >= 1.0 ? Colors.greenAccent : Colors.white,
               ),
@@ -586,7 +594,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           CircleAvatar(
                             radius: 25,
-                            backgroundColor: Colors.white.withOpacity(0.25),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.25,
+                            ),
                             child: Text(
                               userName
                                   .split(' ')
@@ -680,75 +690,69 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 25),
 
                 // Quick Actions
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: GridView.count(
-                    crossAxisCount:
-                        3, // Changed to 3 for better spacing with 6 options
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.1,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    children: [
-                      ActionIcon(
-                        icon: Iconsax.people,
-                        label: "Employees",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EmployeesListScreen(),
-                          ),
-                        ),
-                      ),
-                      ActionIcon(
-                        icon: Iconsax.calendar_edit,
-                        label: "Leave",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LeavesScreen(),
-                          ),
-                        ),
-                      ),
-                      ActionIcon(
-                        icon: Iconsax.document_text,
-                        label: "Payslip",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PayslipListScreen(),
-                          ),
-                        ),
-                      ),
-                      ActionIcon(
-                        icon: Iconsax.task_square,
-                        label: "Tasks",
-                        onTap: () => showSnack("Tasks clicked"),
-                      ),
-                      ActionIcon(
-                        icon: Iconsax.calendar_tick,
-                        label: "Attendance",
-                        onTap: () {
-                          if (employeeId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AttendanceHistoryPage(
-                                  employeeId: employeeId!,
-                                  userName: userName,
-                                ),
-                              ),
-                            );
-                          } else {
-                            showSnack("Loading profile, please wait...");
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                //   child: GridView.count(
+                //     crossAxisCount:
+                //         3, // Changed to 3 for better spacing with 6 options
+                //     shrinkWrap: true,
+                //     physics: const NeverScrollableScrollPhysics(),
+                //     childAspectRatio: 1.1,
+                //     mainAxisSpacing: 10,
+                //     crossAxisSpacing: 10,
+                //     children: [
+                //       ActionIcon(
+                //         icon: Iconsax.people,
+                //         label: "Employees",
+                //         onTap: () => Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (context) => const EmployeeslistScreen(),
+                //           ),
+                //         ),
+                //       ),
+                //       ActionIcon(
+                //         icon: Iconsax.calendar_edit,
+                //         label: "Leave",
+                //         onTap: () => Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (context) => const LeavesScreen(),
+                //           ),
+                //         ),
+                //       ),
+                //       ActionIcon(
+                //         icon: Iconsax.document_text,
+                //         label: "Payslip",
+                //         onTap: () => Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (context) => const PayslipListScreen(),
+                //           ),
+                //         ),
+                //       ),
+                //       ActionIcon(
+                //         icon: Iconsax.calendar_tick,
+                //         label: "Attendance",
+                //         onTap: () {
+                //           if (employeeId != null) {
+                //             Navigator.push(
+                //               context,
+                //               MaterialPageRoute(
+                //                 builder: (_) => AttendanceHistoryPage(
+                //                   employeeId: employeeId!,
+                //                   userName: userName,
+                //                 ),
+                //               ),
+                //             );
+                //           } else {
+                //             showSnack("Loading profile, please wait...");
+                //           }
+                //         },
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 const SizedBox(height: 15),
 
                 // Company Announcement Banner
@@ -768,7 +772,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.orange.withOpacity(0.3),
+                          color: Colors.orange.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -779,7 +783,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -911,8 +915,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             final rawDate = dateStr.contains('T')
                                 ? dateStr.split('T')[0]
                                 : dateStr;
-                            formattedDate = DateFormat('dd MMM yyyy')
-                                .format(DateTime.parse(rawDate));
+                            formattedDate = DateFormat(
+                              'dd MMM yyyy',
+                            ).format(DateTime.parse(rawDate));
                           } catch (_) {}
 
                           // Helper: parse time from date + time strings
@@ -945,8 +950,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                 '${dur.inHours}h ${dur.inMinutes.remainder(60)}m';
                           }
 
-                          final status =
-                              (history['status'] ?? 'present').toString();
+                          final status = (history['status'] ?? 'present')
+                              .toString();
 
                           return _buildHistoryCard(
                             formattedDate,
@@ -1025,7 +1030,7 @@ class _DashboardPageState extends State<DashboardPage> {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1042,7 +1047,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF36617E).withOpacity(0.08),
+                      color: const Color(0xFF36617E).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -1063,10 +1068,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -1122,7 +1129,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -1134,10 +1141,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(width: 3),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -1161,7 +1165,10 @@ class _DashboardPageState extends State<DashboardPage> {
     if (text.isEmpty) return text;
     return text
         .split(' ')
-        .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase())
+        .map(
+          (w) =>
+              w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase(),
+        )
         .join(' ');
   }
 

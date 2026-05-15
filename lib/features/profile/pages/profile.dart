@@ -34,18 +34,21 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           final firstName = user['firstName'] ?? '';
           final lastName = user['lastName'] ?? '';
-          userName = "${_capitalize(firstName)} ${_capitalize(lastName)}".trim();
+          userName = "${_capitalize(firstName)} ${_capitalize(lastName)}"
+              .trim();
           if (userName.isEmpty) userName = "User";
-          
+
           if (user['roles'] != null && user['roles'].isNotEmpty) {
             userRole = _capitalize(user['roles'][0]['name'] ?? "Employee");
           }
-          
+
           // Try to get department from user data if it exists
           if (user['department'] != null) {
-            department = _capitalize(user['department']['name'] ?? "IT Department");
+            department = _capitalize(
+              user['department']['name'] ?? "IT Department",
+            );
           } else if (user['branch'] != null) {
-             department = _capitalize(user['branch']['name'] ?? "IT Department");
+            department = _capitalize(user['branch']['name'] ?? "IT Department");
           }
 
           employeeId = user['employeeId'] ?? user['id']?.toString() ?? "---";
@@ -87,7 +90,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: Colors.red.shade50,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.logout_rounded, color: Colors.red.shade400, size: 32),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red.shade400,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 18),
               const Text(
@@ -115,7 +122,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(ctx).pop(false),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -192,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -200,39 +210,43 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Column(
                 children: [
-                   Stack(
-                     alignment: Alignment.bottomRight,
-                     children: [
-                        CircleAvatar(
-                           radius: 45,
-                           backgroundColor: const Color(0xFF36617E),
-                           child: Text(
-                             isLoading
-                                 ? ''
-                                 : userName
-                                     .split(' ')
-                                     .where((w) => w.isNotEmpty)
-                                     .take(2)
-                                     .map((w) => w[0].toUpperCase())
-                                     .join(),
-                             style: const TextStyle(
-                               color: Colors.white,
-                               fontWeight: FontWeight.bold,
-                               fontSize: 28,
-                             ),
-                           ),
-                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF36617E),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2)
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 45,
+                        backgroundColor: const Color(0xFF36617E),
+                        child: Text(
+                          isLoading
+                              ? ''
+                              : userName
+                                    .split(' ')
+                                    .where((w) => w.isNotEmpty)
+                                    .take(2)
+                                    .map((w) => w[0].toUpperCase())
+                                    .join(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
                           ),
-                          child: const Icon(Iconsax.camera, color: Colors.white, size: 16),
-                        )
-                     ],
-                   ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF36617E),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Iconsax.camera,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 15),
                   Text(
                     isLoading ? "Loading..." : userName,
@@ -244,21 +258,29 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isLoading ? "Fetching details..." : '$userRole | $department',
+                    isLoading
+                        ? "Fetching details..."
+                        : '$userRole | $department',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF36617E).withOpacity(0.1),
+                      color: const Color(0xFF36617E).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      isLoading ? "---" : 'EMP ID: $employeeId', 
-                      style: const TextStyle(color: Color(0xFF36617E), fontWeight: FontWeight.bold)
+                      isLoading ? "---" : 'EMP ID: $employeeId',
+                      style: const TextStyle(
+                        color: Color(0xFF36617E),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -269,11 +291,15 @@ class _ProfilePageState extends State<ProfilePage> {
               alignment: Alignment.centerLeft,
               child: const Text(
                 "Quick Links",
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Color(0xFF1F2937)),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Color(0xFF1F2937),
+                ),
               ),
             ),
             const SizedBox(height: 10),
-            
+
             _buildActionItem(
               context,
               icon: Iconsax.receipt_2,
@@ -296,29 +322,33 @@ class _ProfilePageState extends State<ProfilePage> {
               alignment: Alignment.centerLeft,
               child: const Text(
                 "Security Settings",
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Color(0xFF1F2937)),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Color(0xFF1F2937),
+                ),
               ),
             ),
             const SizedBox(height: 10),
 
-             _buildActionItem(
+            _buildActionItem(
               context,
               icon: Iconsax.lock,
               title: "Password Reset",
               subtitle: "Change or update your password",
               iconColor: Colors.orange.shade500,
             ),
-             _buildActionItem(
+            _buildActionItem(
               context,
               icon: Iconsax.finger_scan,
               title: "Biometric Login",
-               subtitle: "Enable Face ID or Fingerprint",
+              subtitle: "Enable Face ID or Fingerprint",
               iconColor: Colors.green.shade500,
               trailing: Switch(
-                value: true, 
+                value: true,
                 onChanged: (val) {},
                 activeThumbColor: const Color(0xFF36617E),
-              )
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -331,7 +361,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 onPressed: _logout,
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.red, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                   backgroundColor: Colors.red.shade50,
                   foregroundColor: Colors.red,
                 ),
@@ -342,7 +374,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     SizedBox(width: 8),
                     Text(
                       'Log Out securely',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -355,7 +390,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildActionItem(BuildContext context, {
+  Widget _buildActionItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -368,29 +404,43 @@ class _ProfilePageState extends State<ProfilePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-           BoxShadow(
-             color: Colors.black.withOpacity(0.04),
-             blurRadius: 10,
-             offset: const Offset(0, 4)
-           )
-        ]
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 24),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Color(0xFF1F2937))),
-        subtitle: Text(subtitle, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-        trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+        ),
+        trailing:
+            trailing ??
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
         onTap: () {
           if (trailing == null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Routing to $title...")));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text("Routing to $title...")));
           }
         },
       ),
@@ -402,9 +452,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (text.isEmpty) return text;
     return text
         .split(' ')
-        .map((word) => word.isEmpty
-            ? word
-            : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .map(
+          (word) => word.isEmpty
+              ? word
+              : word[0].toUpperCase() + word.substring(1).toLowerCase(),
+        )
         .join(' ');
   }
 }

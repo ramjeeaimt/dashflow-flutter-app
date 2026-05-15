@@ -17,10 +17,12 @@ class ApiService {
       dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
-  // Use 10.0.2.2 for Android emulator to access host localhost
-  // Use your machine's IP address for physical device
-  // static const String baseUrl = 'http://10.0.2.2:5000';
-  static const String baseUrl = 'http://192.168.1.11:5002';
+  // ─── BASE URL CONFIG ────────────────────────────────────────────
+  // 🟢 EMULATOR  → use 'http://10.0.2.2:5002'
+  // 🟢 PHYSICAL  → use your PC's IPv4 (run: ipconfig | findstr IPv4)
+  // ⚠️  If "Connection Refused", your IP may have changed — update below!
+  // ─────────────────────────────────────────────────────────────────
+  static const String baseUrl = 'https://dashflow-backend.vercel.app/api';
 
   static void _logRequest(
     String method,

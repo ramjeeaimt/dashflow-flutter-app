@@ -145,7 +145,7 @@ class _PayslipListScreenState extends State<PayslipListScreen> {
                       borderRadius: BorderRadius.circular(15),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -156,7 +156,7 @@ class _PayslipListScreenState extends State<PayslipListScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: slip['color'].withOpacity(0.1),
+                            color: (slip['color'] as Color).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(Iconsax.wallet_2, color: slip['color']),

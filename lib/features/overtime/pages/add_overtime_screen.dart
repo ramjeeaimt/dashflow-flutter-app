@@ -176,7 +176,7 @@ class AddOvertimeScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.blue),
                               shape: BoxShape.circle,
-                              color: Colors.blue.withOpacity(0.1),
+                              color: Colors.blue.withValues(alpha: 0.1),
                             ),
                             child: const Icon(Icons.add, size: 16, color: Colors.blue),
                           ),

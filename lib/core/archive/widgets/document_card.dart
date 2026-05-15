@@ -80,7 +80,7 @@ class DocumentCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _getIconColor(document.fileType).withOpacity(0.1),
+                color: _getIconColor(document.fileType).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

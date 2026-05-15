@@ -29,7 +29,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
       'type': 'Sick',
       'status': 'Approved',
       'month': 'November 2020',
-      'typeColor': Colors.blue.shade300,
+      'typeColor': Colors.blue,
       'statusBgColor': Colors.green.shade100,
       'statusTextColor': Colors.green.shade800,
     },
@@ -49,11 +49,17 @@ class _LeavesScreenState extends State<LeavesScreen> {
       'type': 'Sick',
       'status': 'Approved',
       'month': 'November 2020',
-      'typeColor': Colors.blue.shade300,
+      'typeColor': Colors.blue,
       'statusBgColor': Colors.green.shade100,
       'statusTextColor': Colors.green.shade800,
     },
   ];
+
+  // ✅ FIX 2: filteredLeaves is a getter — runs every time selectedFilter changes
+  List<Map<String, dynamic>> get filteredLeaves {
+    if (selectedFilter == "All") return leaves;
+    return leaves.where((l) => l['type'] == selectedFilter).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +86,10 @@ class _LeavesScreenState extends State<LeavesScreen> {
                       Stack(
                         children: [
                           IconButton(
-                            icon: const Icon(Iconsax.notification, color: Color(0xFF1E202B)),
+                            icon: const Icon(
+                              Iconsax.notification,
+                              color: Color(0xFF1E202B),
+                            ),
                             onPressed: () {},
                           ),
                           Positioned(
@@ -115,7 +124,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                           ),
                           child: const Icon(Icons.add, color: Colors.white),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ],
@@ -142,14 +151,20 @@ class _LeavesScreenState extends State<LeavesScreen> {
             const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                itemCount: leaves.length,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                // ✅ FIX 3: use filteredLeaves, not leaves
+                itemCount: filteredLeaves.length,
                 itemBuilder: (context, index) {
-                  final leave = leaves[index];
+                  final leave = filteredLeaves[index]; // ✅ FIX 3
                   bool showMonthInfo = false;
                   if (index == 0) {
                     showMonthInfo = true;
-                  } else if (leaves[index - 1]['month'] != leave['month']) {
+                  } else if (filteredLeaves[index - 1]['month'] !=
+                      leave['month']) {
+                    // ✅ FIX 3
                     showMonthInfo = true;
                   }
 
@@ -176,7 +191,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.05),
+                              color: Colors.grey.withValues(alpha: 0.05),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -220,7 +235,9 @@ class _LeavesScreenState extends State<LeavesScreen> {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: leave['statusBgColor'],
                                     borderRadius: BorderRadius.circular(8),
@@ -241,7 +258,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                                   size: 20,
                                 ),
                               ],
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -273,7 +290,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
