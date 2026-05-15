@@ -19,7 +19,7 @@ class _BottomBarWidgetState extends State<BottomBarWidget> {
   final List<Widget> screens = [
     const DashboardPage(),
     ActivityPage(),
-    const ProjectsTab(),
+    // const ProjectsTab(),
     const ProfilePage(),
   ];
 
@@ -43,9 +43,7 @@ class _BottomBarWidgetState extends State<BottomBarWidget> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
@@ -163,10 +161,7 @@ class _BottomBarWidgetState extends State<BottomBarWidget> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: IndexedStack(
-          index: selectedIndex,
-          children: screens,
-        ),
+        body: IndexedStack(index: selectedIndex, children: screens),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedIndex,
           selectedItemColor: const Color(0xFF36617E),
@@ -187,11 +182,11 @@ class _BottomBarWidgetState extends State<BottomBarWidget> {
               activeIcon: Icon(Iconsax.clock5),
               label: 'Activity',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Iconsax.folder_2),
-              activeIcon: Icon(Iconsax.folder_25),
-              label: 'Projects',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Iconsax.folder_2),
+            //   activeIcon: Icon(Iconsax.folder_25),
+            //   label: 'Projects',
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Iconsax.profile_circle),
               activeIcon: Icon(Iconsax.profile_circle5),
