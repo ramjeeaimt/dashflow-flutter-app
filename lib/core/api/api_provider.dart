@@ -36,8 +36,9 @@ class LocationActionNotifier extends Notifier<ApiState> {
     double latitude,
     double longitude,
     String location,
-    String notes,
-  ) async {
+    String notes, {
+    bool isWorkFromHome = false,
+  }) async {
     state = state.copyWith(status: ApiStatus.loading);
     try {
       final result = await ApiService.checkIn(
@@ -46,6 +47,7 @@ class LocationActionNotifier extends Notifier<ApiState> {
         longitude,
         location,
         notes,
+        isWorkFromHome: isWorkFromHome,
       );
       state = state.copyWith(
         status: ApiStatus.success,

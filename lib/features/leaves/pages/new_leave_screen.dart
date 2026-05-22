@@ -63,7 +63,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.05),
+                        color: Colors.grey.withOpacity(0.05),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -130,7 +130,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withValues(alpha: 0.1),
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.grid_view_rounded, color: Color(0xFF5A67D8)),
@@ -179,7 +179,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withValues(alpha: 0.1),
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.edit_rounded, color: Color(0xFF5A67D8)),
@@ -219,7 +219,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withValues(alpha: 0.1),
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),
@@ -293,7 +293,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withValues(alpha: 0.1),
+              color: const Color(0xFF5A67D8).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),

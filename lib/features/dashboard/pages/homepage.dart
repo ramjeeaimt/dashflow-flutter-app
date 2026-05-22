@@ -1,3 +1,4 @@
+import 'package:dashflow/features/task/task_page.dart';
 import 'package:flutter/material.dart';
 import 'package:dashflow/features/dashboard/pages/home_page_locations.dart';
 import 'package:iconsax/iconsax.dart';
@@ -9,10 +10,11 @@ import 'package:intl/intl.dart';
 import 'package:dashflow/features/auth/pages/login_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dashflow/features/activities/pages/location_page.dart';
-// import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
-// import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
-// import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
-// import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
+
+import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
+import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
+import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
+import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
@@ -116,17 +118,28 @@ class _DashboardPageState extends State<DashboardPage> {
         final user = jsonDecode(userStr);
         final userId = user['id'];
 
-        setState(() {
-          employeeId = userId; // Setting it directly from user data
-          userName = _capitalize(
-            "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
-          );
-          if (userName.isEmpty) userName = "User";
-          userEmail = user['email'] ?? '';
-          if (user['roles'] != null && user['roles'].isNotEmpty) {
-            userRole = _capitalize(user['roles'][0]['name'] ?? "Employee");
-          }
-        });
+        if (mounted) {
+          setState(() {
+            employeeId = userId; // Setting it directly from user data
+            userName = _capitalize(
+              "${user['firstName'] ?? ''} ${user['lastName'] ?? ''}".trim(),
+            );
+            if (userName.isEmpty) userName = "User";
+            userEmail = user['email'] ?? '';
+            if (user['roles'] != null) {
+              if (user['roles'] is List && user['roles'].isNotEmpty) {
+                final firstRole = user['roles'][0];
+                if (firstRole is Map) {
+                  userRole = _capitalize(firstRole['name'] ?? "Employee");
+                } else {
+                  userRole = _capitalize(firstRole.toString());
+                }
+              } else if (user['roles'] is String) {
+                userRole = _capitalize(user['roles']);
+              }
+            }
+          });
+        }
 
         // Get today's attendance using the assigned employeeId
         if (employeeId != null) {
@@ -146,52 +159,60 @@ class _DashboardPageState extends State<DashboardPage> {
             DateTime? checkIn = _parseUtcTime(date, checkInStr);
             DateTime? checkOut = _parseUtcTime(date, checkOutStr);
 
-            setState(() {
-              checkInDateTime = checkIn;
-              checkOutDateTime = checkOut;
+            if (mounted) {
+              setState(() {
+                checkInDateTime = checkIn;
+                checkOutDateTime = checkOut;
 
-              if (checkIn != null) {
-                clockInTime = DateFormat('hh:mm a').format(checkIn);
-              }
-              if (checkOut != null) {
-                clockOutTime = DateFormat('hh:mm a').format(checkOut);
-                attendanceStatus = "Completed";
+                if (checkIn != null) {
+                  clockInTime = DateFormat('hh:mm a').format(checkIn);
+                }
+                if (checkOut != null) {
+                  clockOutTime = DateFormat('hh:mm a').format(checkOut);
+                  attendanceStatus = "Completed";
 
-                // Calculate working hours
-                final duration = checkOut.difference(checkIn!);
-                final hours = duration.inHours;
-                final minutes = duration.inMinutes.remainder(60);
-                workingHours = "${hours}h ${minutes}m";
-              } else {
-                attendanceStatus = "Clock-Out";
-                attendanceId = attendance['id'];
-                debugPrint("Set attendanceId to $attendanceId"); // DEBUG LOG
-              }
-            });
+                  // Calculate working hours
+                  final duration = checkOut.difference(checkIn!);
+                  final hours = duration.inHours;
+                  final minutes = duration.inMinutes.remainder(60);
+                  workingHours = "${hours}h ${minutes}m";
+                } else {
+                  attendanceStatus = "Clock-Out";
+                  attendanceId = attendance['id'];
+                  debugPrint("Set attendanceId to $attendanceId"); // DEBUG LOG
+                }
+              });
+            }
           } else {
-            setState(() {
-              checkInDateTime = null;
-              checkOutDateTime = null;
-              attendanceStatus = "Clock-In";
-              clockInTime = "--:--";
-              clockOutTime = "--:--";
-              workingHours = "--h --m";
-            });
+            if (mounted) {
+              setState(() {
+                checkInDateTime = null;
+                checkOutDateTime = null;
+                attendanceStatus = "Clock-In";
+                clockInTime = "--:--";
+                clockOutTime = "--:--";
+                workingHours = "--h --m";
+              });
+            }
           }
 
           // Get Activity History
           final history = await ApiService.getAttendanceHistory(employeeId!);
-          setState(() {
-            activityHistory = history;
-          });
+          if (mounted) {
+            setState(() {
+              activityHistory = history;
+            });
+          }
         }
       }
     } catch (e) {
       debugPrint("Error fetching attendance: $e");
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -395,33 +416,34 @@ class _DashboardPageState extends State<DashboardPage> {
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       // Directly navigate
-      if (context.mounted) {
-        String preStatus = attendanceStatus;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => LocationConfirmPage(
-              isCheckIn: attendanceStatus == "Clock-In",
-              employeeId: employeeId,
-              attendanceId: attendanceId,
-            ),
+      if (!mounted) return;
+      String preStatus = attendanceStatus;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LocationConfirmPage(
+            isCheckIn: attendanceStatus == "Clock-In",
+            employeeId: employeeId,
+            attendanceId: attendanceId,
           ),
-        );
-        // fetch status when we return
-        await _fetchAttendanceStatus();
+        ),
+      );
+      // fetch status when we return
+      await _fetchAttendanceStatus();
 
-        // Show celebration if just checked out
-        if (preStatus == "Clock-Out" &&
-            attendanceStatus == "Completed" &&
-            mounted) {
-          showSnack("🎉 Workday completed. Total Working Time: $workingHours");
-        }
+      // Show celebration if just checked out
+      if (preStatus == "Clock-Out" &&
+          attendanceStatus == "Completed" &&
+          mounted) {
+        showSnack("🎉 Workday completed. Total Working Time: $workingHours");
       }
     } else {
-      setState(() {
-        isLoading = false; // Reset loading so they can interact again
-        isPopUpVisible = true;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Reset loading so they can interact again
+          isPopUpVisible = true;
+        });
+      }
     }
   }
 
@@ -569,6 +591,7 @@ class _DashboardPageState extends State<DashboardPage> {
           SingleChildScrollView(
             child: Column(
               children: [
+
                 // Header Section
                 Container(
                   decoration: const BoxDecoration(
@@ -690,69 +713,80 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 25),
 
                 // Quick Actions
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                //   child: GridView.count(
-                //     crossAxisCount:
-                //         3, // Changed to 3 for better spacing with 6 options
-                //     shrinkWrap: true,
-                //     physics: const NeverScrollableScrollPhysics(),
-                //     childAspectRatio: 1.1,
-                //     mainAxisSpacing: 10,
-                //     crossAxisSpacing: 10,
-                //     children: [
-                //       ActionIcon(
-                //         icon: Iconsax.people,
-                //         label: "Employees",
-                //         onTap: () => Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (context) => const EmployeeslistScreen(),
-                //           ),
-                //         ),
-                //       ),
-                //       ActionIcon(
-                //         icon: Iconsax.calendar_edit,
-                //         label: "Leave",
-                //         onTap: () => Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (context) => const LeavesScreen(),
-                //           ),
-                //         ),
-                //       ),
-                //       ActionIcon(
-                //         icon: Iconsax.document_text,
-                //         label: "Payslip",
-                //         onTap: () => Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (context) => const PayslipListScreen(),
-                //           ),
-                //         ),
-                //       ),
-                //       ActionIcon(
-                //         icon: Iconsax.calendar_tick,
-                //         label: "Attendance",
-                //         onTap: () {
-                //           if (employeeId != null) {
-                //             Navigator.push(
-                //               context,
-                //               MaterialPageRoute(
-                //                 builder: (_) => AttendanceHistoryPage(
-                //                   employeeId: employeeId!,
-                //                   userName: userName,
-                //                 ),
-                //               ),
-                //             );
-                //           } else {
-                //             showSnack("Loading profile, please wait...");
-                //           }
-                //         },
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: GridView.count(
+                    crossAxisCount:
+                        3, // Changed to 3 for better spacing with 6 options
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    childAspectRatio: 1.1,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    children: [
+                      ActionIcon(
+                        icon: Iconsax.people,
+                        label: "Employees",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EmployeesListScreen(),
+                          ),
+                        ),
+                      ),
+                      ActionIcon(
+                        icon: Iconsax.calendar_edit,
+                        label: "Leave",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LeaveScreen(),
+                          ),
+                        ),
+                      ),
+                      ActionIcon(
+                        icon: Iconsax.document_text,
+                        label: "Payslip",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PayslipListScreen(),
+                          ),
+                        ),
+                      ),
+                      ActionIcon(
+                        icon: Iconsax.task_square,
+                        label: "Tasks",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TaskPage(),
+                          ),
+                        ),
+                      ),
+                      ActionIcon(
+                        icon: Iconsax.calendar_tick,
+                        label: "Attendance",
+                        onTap: () {
+                          if (employeeId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AttendanceHistoryPage(
+                                  employeeId: employeeId!,
+                                  userName: userName,
+                                ),
+                              ),
+                            );
+                          } else {
+                            showSnack("Loading profile, please wait...");
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 15),
 
                 // Company Announcement Banner
@@ -981,9 +1015,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   employeeId: employeeId,
                   attendanceId: attendanceId,
                   onClose: () {
-                    setState(() {
-                      isPopUpVisible = false;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        isPopUpVisible = false;
+                      });
+                    }
                     // Refresh status after popup closes (assuming check-in/out might have happened)
                     _fetchAttendanceStatus();
                   },

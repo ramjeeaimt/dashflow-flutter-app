@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashflow/features/auth/pages/login_screen.dart';
+import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
+import 'package:dashflow/core/archive/screens/archive_screen.dart';
 import 'dart:convert';
 
 class ProfilePage extends StatefulWidget {
@@ -38,17 +40,34 @@ class _ProfilePageState extends State<ProfilePage> {
               .trim();
           if (userName.isEmpty) userName = "User";
 
-          if (user['roles'] != null && user['roles'].isNotEmpty) {
-            userRole = _capitalize(user['roles'][0]['name'] ?? "Employee");
+          if (user['roles'] != null) {
+            if (user['roles'] is List && user['roles'].isNotEmpty) {
+              final firstRole = user['roles'][0];
+              if (firstRole is Map) {
+                userRole = _capitalize(firstRole['name'] ?? "Employee");
+              } else {
+                userRole = _capitalize(firstRole.toString());
+              }
+            } else if (user['roles'] is String) {
+              userRole = _capitalize(user['roles']);
+            }
           }
 
           // Try to get department from user data if it exists
           if (user['department'] != null) {
-            department = _capitalize(
-              user['department']['name'] ?? "IT Department",
-            );
+            if (user['department'] is Map) {
+              department = _capitalize(
+                user['department']['name'] ?? "IT Department",
+              );
+            } else {
+              department = _capitalize(user['department'].toString());
+            }
           } else if (user['branch'] != null) {
-            department = _capitalize(user['branch']['name'] ?? "IT Department");
+            if (user['branch'] is Map) {
+              department = _capitalize(user['branch']['name'] ?? "IT Department");
+            } else {
+              department = _capitalize(user['branch'].toString());
+            }
           }
 
           employeeId = user['employeeId'] ?? user['id']?.toString() ?? "---";
@@ -306,6 +325,12 @@ class _ProfilePageState extends State<ProfilePage> {
               title: "My Payslip",
               subtitle: "View and download your salary slips",
               iconColor: Colors.blue.shade600,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PayslipListScreen()),
+                );
+              },
             ),
             _buildActionItem(
               context,
@@ -313,6 +338,12 @@ class _ProfilePageState extends State<ProfilePage> {
               title: "My Archives",
               subtitle: "Past documents and records",
               iconColor: Colors.purple.shade500,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ArchiveScreen()),
+                );
+              },
             ),
 
             const SizedBox(height: 30),
@@ -397,6 +428,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required String subtitle,
     required Color iconColor,
     Widget? trailing,
+    VoidCallback? onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -436,7 +468,7 @@ class _ProfilePageState extends State<ProfilePage> {
         trailing:
             trailing ??
             const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        onTap: () {
+        onTap: onTap ?? () {
           if (trailing == null) {
             ScaffoldMessenger.of(
               context,

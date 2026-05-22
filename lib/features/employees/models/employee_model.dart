@@ -30,7 +30,9 @@ class EmployeeModel {
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
       designation: json['designation'] ?? 'Employee',
-      department: json['department'] ?? 'General',
+      department: (json['department'] is Map)
+          ? (json['department']['name'] ?? 'General').toString()
+          : (json['department']?.toString() ?? 'General'),
       phone: json['phone'] ?? '',
       isOnline: json['isOnline'] ?? false,
       roles: json['roles'] ?? [],

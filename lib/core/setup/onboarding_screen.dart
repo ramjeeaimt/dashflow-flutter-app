@@ -15,11 +15,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   final List<Map<String, String>> onboardingData = [
-    // {
-    //   'image': 'assets/images/logo.png',
-    //   'title': 'Seamless Design',
-    //   'desc': 'Simplify your HR processes with flexibility.',
-    // },
     {
       'image': 'assets/images/logo2.png',
       'title': 'Boost Productivity',

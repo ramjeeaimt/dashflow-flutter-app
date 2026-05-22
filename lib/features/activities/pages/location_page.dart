@@ -7,14 +7,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashflow/core/api/api_provider.dart';
 
-const kGoogleApiKey =
-    "AIzaSyClF12i0eHy7Nrig6EYu8Z4U5DA2zC09OI"; // 🔑 Replace with your key
+const kGoogleApiKey = "AIzaSyClF12i0eHy7Nrig6EYu8Z4U5DA2zC09OI";
 
 class LocationConfirmPage extends ConsumerStatefulWidget {
   final bool isCheckIn;
   final String? employeeId;
   final String? attendanceId;
-
   const LocationConfirmPage({
     super.key,
     required this.isCheckIn,
@@ -33,6 +31,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
   String address = "Fetching address...";
   double accuracy = 0.0;
   final TextEditingController _searchController = TextEditingController();
+  bool isWorkFromHome = false;
 
   @override
   void initState() {
@@ -47,7 +46,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
     super.dispose();
   }
 
-  /// 🧭 Get user location
   Future<void> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -82,7 +80,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
     await _getAddressFromLatLng(position);
   }
 
-  /// 📍 Convert LatLng to Address
   Future<void> _getAddressFromLatLng(Position position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -103,12 +100,10 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
     }
   }
 
-  /// 🔁 Refresh button
   void _refreshLocation() {
     _determinePosition();
   }
 
-  /// ✅ Confirm button
   Future<void> _confirmLocation() async {
     debugPrint(
       "DEBUG: Confirm clicked. isCheckIn: ${widget.isCheckIn}, EmployeeID: ${widget.employeeId}, AttendanceID: ${widget.attendanceId}",
@@ -135,7 +130,8 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
             currentPosition!.latitude,
             currentPosition!.longitude,
             address,
-            "", // notes
+            "",
+            isWorkFromHome: isWorkFromHome,
           );
       debugPrint("DEBUG: checkIn called");
     } else {
@@ -153,7 +149,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
             widget.attendanceId!,
             currentPosition!.latitude,
             currentPosition!.longitude,
-            "", // notes
+            "",
           );
       debugPrint("DEBUG: checkOut called");
     }
@@ -186,7 +182,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to provider changes for SnackBar feedback and Navigation
     ref.listen<ApiState>(locationActionProvider, (previous, next) {
       if (next.status == ApiStatus.success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,43 +190,52 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 10),
-                Text(next.message ?? "Success", style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  next.message ?? "Success",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          )
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
         Navigator.pop(context, true);
       } else if (next.status == ApiStatus.error) {
         String msg = next.message ?? "An error occurred";
-        
-        // 1. Gracefully handle the confusing "Already checked in" API response
         if (msg.toLowerCase().contains("already checked in")) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(
-               content: const Row(
-                 children: [
-                   Icon(Icons.info_outline, color: Colors.white),
-                   SizedBox(width: 10),
-                   Text("You are already checked in for today.", style: TextStyle(fontWeight: FontWeight.bold)),
-                 ],
-               ),
-               backgroundColor: Colors.blue.shade600, // Not scary red
-               behavior: SnackBarBehavior.floating,
-               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-             )
-           );
-           Navigator.pop(context, true); // Pop back to dashboard to refresh UI state
-           
-        // 2. Gracefully handle no internet
-        } else if (msg.toLowerCase().contains("socketexception") || msg.toLowerCase().contains("failed host lookup") || msg.toLowerCase().contains("network error")) {
-           _showErrorDialog(context, "No internet connection. Please check your network and try again.");
-           
-        // 3. General error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.white),
+                  SizedBox(width: 10),
+                  Text(
+                    "You are already checked in for today.",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.blue.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+          Navigator.pop(context, true);
+        } else if (msg.toLowerCase().contains("socketexception") ||
+            msg.toLowerCase().contains("failed host lookup") ||
+            msg.toLowerCase().contains("network error")) {
+          _showErrorDialog(
+            context,
+            "No internet connection. Please check your network and try again.",
+          );
         } else {
-           _showErrorDialog(context, msg);
+          _showErrorDialog(context, msg);
         }
       }
     });
@@ -255,7 +259,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
                   onMapCreated: (controller) => mapController = controller,
                 ),
 
-          // 🔍 Search bar
           SafeArea(
             child: Container(
               margin: const EdgeInsets.all(12),
@@ -287,8 +290,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
               ),
             ),
           ),
-
-          // 🏠 Bottom Confirm Card
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -320,23 +321,51 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(address, style: const TextStyle(fontSize: 14)),
+                  if (widget.isCheckIn) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.home_work_rounded, color: Color(0xFF2C5282), size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              "Work From Home",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Switch(
+                          value: isWorkFromHome,
+                          activeTrackColor: const Color(0xFF2C5282).withValues(alpha: 0.5),
+                          activeThumbColor: const Color(0xFF2C5282),
+                          onChanged: (val) {
+                            setState(() {
+                              isWorkFromHome = val;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : _refreshLocation, // Disable when loading
+                        onPressed: isLoading ? null : _refreshLocation,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
                         ),
                         child: const Text("Refresh"),
                       ),
                       ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : _confirmLocation, // Disable when loading
+                        onPressed: isLoading ? null : _confirmLocation,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
                         ),
@@ -364,16 +393,12 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
 
   void _showErrorDialog(BuildContext context, String rawMessage) {
     String displayMessage = rawMessage;
-
-    // 1. Try to parse if it's JSON inside the exception string
-    // Standardize: Remove "Exception: Check-in failed: " prefix first
     String cleanStr = rawMessage
         .replaceAll("Exception: Check-in failed: ", "")
         .replaceAll("Exception: Check-out failed: ", "")
         .replaceAll("Exception: ", "");
 
     try {
-      // Only try to parse if it looks like JSON
       if (cleanStr.trim().startsWith("{")) {
         final Map<String, dynamic> errorJson = jsonDecode(cleanStr);
         if (errorJson.containsKey('message')) {
@@ -420,7 +445,6 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
   }
 }
 
-/// Dialog widget that fetches Place autocomplete results using the REST API
 class _PlacesSearchDialog extends StatefulWidget {
   final String apiKey;
   final TextEditingController searchController;
@@ -460,7 +484,6 @@ class _PlacesSearchDialogState extends State<_PlacesSearchDialog> {
         });
       }
     } catch (_) {
-      // silently fail
     } finally {
       setState(() => _isLoading = false);
     }
@@ -523,8 +546,9 @@ class _PlacesSearchDialogState extends State<_PlacesSearchDialog> {
                         style: const TextStyle(fontSize: 13),
                       ),
                       onTap: () async {
-                        final details =
-                            await _getPlaceDetails(p['place_id'] ?? '');
+                        final details = await _getPlaceDetails(
+                          p['place_id'] ?? '',
+                        );
                         if (context.mounted) {
                           Navigator.of(context).pop(details);
                         }

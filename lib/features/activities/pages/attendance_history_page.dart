@@ -21,7 +21,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   bool isLoading = true;
   List<dynamic> attendanceList = [];
 
-  // Filters
   DateTime selectedMonth = DateTime.now();
   String selectedStatus = 'all';
 
@@ -31,6 +30,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     {'value': 'absent', 'label': 'Absent'},
     {'value': 'late', 'label': 'Late'},
     {'value': 'half_day', 'label': 'Half Day'},
+    {'value': 'wfh', 'label': 'Work From Home'},
   ];
 
   @override
@@ -45,7 +45,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     });
 
     try {
-      // Calculate start and end date for the selected month
       final startDate = DateTime(selectedMonth.year, selectedMonth.month, 1);
       final endDate = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
 
@@ -63,6 +62,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
         attendanceList = data;
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error fetching history: $e')));
@@ -77,14 +77,12 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedMonth,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2026),
       lastDate: DateTime.now(),
-      initialDatePickerMode: DatePickerMode
-          .year, // Start with year selection if possible, but standard is fine
+      initialDatePickerMode: DatePickerMode.year,
       helpText: 'Select Month',
     );
 
-    // Note: Standard date picker picks a day. We'll just use the month/year from it.
     if (picked != null &&
         (picked.month != selectedMonth.month ||
             picked.year != selectedMonth.year)) {
@@ -106,6 +104,24 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     }
   }
 
+  Map<String, int> _getMonthSummary() {
+    int present = 0, absent = 0, wfh = 0, late = 0;
+    for (final item in attendanceList) {
+      final status = (item['status'] ?? '').toString().toLowerCase();
+      final workMode = (item['workMode'] ?? '').toString().toLowerCase();
+      if (workMode == 'wfh') {
+        wfh++;
+      } else if (status == 'present') {
+        present++;
+      } else if (status == 'absent') {
+        absent++;
+      } else if (status == 'late') {
+        late++;
+      }
+    }
+    return {'present': present, 'absent': absent, 'wfh': wfh, 'late': late};
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,7 +134,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
       ),
       body: Column(
         children: [
-          // Filters Section
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.grey[50],
@@ -126,7 +141,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
               children: [
                 Row(
                   children: [
-                    // Month Selector
                     Expanded(
                       child: InkWell(
                         onTap: () => _selectMonth(context),
@@ -160,7 +174,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Status Selector
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -201,11 +214,13 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     ),
                   ],
                 ),
+                if (!isLoading && attendanceList.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildMonthlySummaryStrip(),
+                ],
               ],
             ),
           ),
-
-          // List Section
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -238,109 +253,252 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                         date,
                         item['checkOutTime'],
                       );
-                      final status =
-                          item['status'] ?? 'Present'; // Default or from API
+                      final status = item['status'] ?? 'Present';
+                      final workMode = (item['workMode'] ?? 'office')
+                          .toString();
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  DateFormat(
-                                    'EEEE, dd MMM',
-                                  ).format(DateTime.parse(date)),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      status,
-                                    ).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    status.toString().toUpperCase(),
-                                    style: TextStyle(
-                                      color: _getStatusColor(status),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTimeColumn(
-                                    "Check In",
-                                    checkIn != null
-                                        ? DateFormat('hh:mm a').format(checkIn)
-                                        : "--:--",
-                                    Iconsax.login,
-                                    Colors.green,
-                                  ),
-                                ),
-                                Container(
-                                  width: 1,
-                                  height: 30,
-                                  color: Colors.grey.shade200,
-                                ),
-                                Expanded(
-                                  child: _buildTimeColumn(
-                                    "Check Out",
-                                    checkOut != null
-                                        ? DateFormat('hh:mm a').format(checkOut)
-                                        : "--:--",
-                                    Iconsax.logout,
-                                    Colors.orange,
-                                  ),
-                                ),
-                                Container(
-                                  width: 1,
-                                  height: 30,
-                                  color: Colors.grey.shade200,
-                                ),
-                                Expanded(
-                                  child: _buildTimeColumn(
-                                    "Hrs",
-                                    _calculateHours(checkIn, checkOut),
-                                    Iconsax.clock,
-                                    Colors.blue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                      return _buildAttendanceCard(
+                        date: date,
+                        checkIn: checkIn,
+                        checkOut: checkOut,
+                        status: status,
+                        workMode: workMode,
                       );
                     },
                   ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlySummaryStrip() {
+    final summary = _getMonthSummary();
+
+    return Row(
+      children: [
+        _buildSummaryChip(
+          label: "Present",
+          count: summary['present']!,
+          color: Colors.green,
+          icon: Icons.check_circle_outline,
+        ),
+        const SizedBox(width: 8),
+        _buildSummaryChip(
+          label: "WFH",
+          count: summary['wfh']!,
+          color: Colors.teal,
+          icon: Icons.home_work_rounded,
+        ),
+        const SizedBox(width: 8),
+        _buildSummaryChip(
+          label: "Absent",
+          count: summary['absent']!,
+          color: Colors.red,
+          icon: Icons.cancel_outlined,
+        ),
+        const SizedBox(width: 8),
+        _buildSummaryChip(
+          label: "Late",
+          count: summary['late']!,
+          color: Colors.orange,
+          icon: Icons.access_time,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryChip({
+    required String label,
+    required int count,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(height: 2),
+            Text(
+              "$count",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: 14,
+              ),
+            ),
+            Text(label, style: TextStyle(fontSize: 10, color: color)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttendanceCard({
+    required String date,
+    required DateTime? checkIn,
+    required DateTime? checkOut,
+    required String status,
+    required String workMode,
+  }) {
+    final bool isWFH = workMode.toLowerCase() == 'wfh';
+    final Color wfhColor = isWFH ? Colors.teal : Colors.blue;
+    final IconData wfhIcon = isWFH
+        ? Icons.home_work_rounded
+        : Icons.business_rounded;
+    final String wfhLabel = isWFH ? "Work From Home" : "Office";
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(
+          left: BorderSide(color: wfhColor, width: 4),
+          top: BorderSide(color: Colors.grey.shade200),
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat('EEEE, dd MMM').format(DateTime.parse(date)),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: wfhColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(wfhIcon, size: 11, color: wfhColor),
+                        const SizedBox(width: 3),
+                        Text(
+                          wfhLabel,
+                          style: TextStyle(
+                            color: wfhColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(status).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      status.toString().toUpperCase(),
+                      style: TextStyle(
+                        color: _getStatusColor(status),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildTimeColumn(
+                  "Check In",
+                  checkIn != null
+                      ? DateFormat('hh:mm a').format(checkIn)
+                      : "--:--",
+                  Iconsax.login,
+                  Colors.green,
+                ),
+              ),
+              Container(width: 1, height: 30, color: Colors.grey.shade200),
+              Expanded(
+                child: _buildTimeColumn(
+                  "Check Out",
+                  checkOut != null
+                      ? DateFormat('hh:mm a').format(checkOut)
+                      : "--:--",
+                  Iconsax.logout,
+                  Colors.orange,
+                ),
+              ),
+              Container(width: 1, height: 30, color: Colors.grey.shade200),
+              Expanded(
+                child: _buildTimeColumn(
+                  "Hrs",
+                  _calculateHours(checkIn, checkOut),
+                  Iconsax.clock,
+                  Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          if (isWFH) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Color(0xFFF3F4F6)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 13,
+                  color: Colors.teal.shade400,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    "Remote Location",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.teal.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -392,6 +550,8 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
         return Colors.orange;
       case 'half_day':
         return Colors.purple;
+      case 'wfh':
+        return Colors.teal;
       default:
         return Colors.blue;
     }
