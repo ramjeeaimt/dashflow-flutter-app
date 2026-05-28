@@ -1,4 +1,14 @@
+import 'package:dashflow/company/pages/Recruitment.dart';
+import 'package:dashflow/company/pages/add_employee_page.dart';
+import 'package:dashflow/company/pages/company_profile_page.dart';
 import 'package:dashflow/company/pages/dashboard_page.dart';
+import 'package:dashflow/company/pages/my_attendance_page.dart';
+import 'package:dashflow/company/pages/my_leaves_page.dart';
+import 'package:dashflow/company/pages/my_payroll_page.dart';
+import 'package:dashflow/company/pages/notifications_page.dart';
+import 'package:dashflow/company/pages/roles_permissions_page.dart';
+import 'package:dashflow/company/pages/user_permissions_page.dart';
+import 'package:dashflow/company/widgets/productivity_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dashflow/core/setup/splash_screen.dart';
@@ -36,9 +46,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF36617E), // New Requested Primary
+          seedColor: const Color(0xFF36617E),
           secondary: Colors.white,
-          surface: Colors.grey[50], // Light clean background
+          surface: Colors.grey[50],
         ),
         scaffoldBackgroundColor: Colors.grey[50],
         textTheme: GoogleFonts.poppinsTextTheme(),
@@ -89,7 +99,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+      home: DashboardPage(),
     );
   }
 }

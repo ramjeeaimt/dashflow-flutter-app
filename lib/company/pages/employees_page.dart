@@ -1,20 +1,20 @@
+import 'package:dashflow/company/pages/add_employee_page.dart';
 import 'package:flutter/material.dart';
+import 'add_new_empoyees.dart';
 
 void main() {
-  runApp(const EmployeeApp());
+  runApp(const EmployeesPage());
 }
 
-class EmployeeApp extends StatelessWidget {
-  const EmployeeApp({super.key});
+class EmployeesPage extends StatelessWidget {
+  const EmployeesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Employee Page',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
+      theme: ThemeData(primarySwatch: Colors.indigo),
       home: const EmployeePage(),
     );
   }
@@ -47,10 +47,7 @@ class EmployeePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Employee Details'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Employee Details'), centerTitle: true),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: employees.length,
@@ -120,11 +117,7 @@ class EmployeePage extends StatelessWidget {
                     icon: const Icon(Icons.edit),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Edit ${employee['name']}',
-                          ),
-                        ),
+                        SnackBar(content: Text('Edit ${employee['name']}')),
                       );
                     },
                   ),
@@ -136,10 +129,9 @@ class EmployeePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Add New Employee'),
-            ),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddEmployeeCompletePage()),
           );
         },
         child: const Icon(Icons.add),

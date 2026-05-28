@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +18,17 @@ class MyApp extends StatelessWidget {
 }
 
 class ProductivityChart extends StatefulWidget {
-  const ProductivityChart({Key? key}) : super(key: key);
+  const ProductivityChart({super.key});
 
   @override
-  State<ProductivityChart> createState() =>
-      _ProductivityChartState();
+  State<ProductivityChart> createState() => _ProductivityChartState();
 }
 
 class _ProductivityChartState extends State<ProductivityChart> {
   int _selectedTab = 0;
   String _selectedPeriod = 'Week';
 
-  final productivityData = {
+  final Map<String, List<Map<String, dynamic>>> productivityData = {
     'Week': [
       {'day': 'Mon', 'tasks': 12, 'completed': 10, 'hours': 8.5},
       {'day': 'Tue', 'tasks': 15, 'completed': 13, 'hours': 8.2},
@@ -80,24 +80,27 @@ class _ProductivityChartState extends State<ProductivityChart> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            
             _buildProductivityScoreCard(),
             const SizedBox(height: 24),
             _buildPeriodSelector(),
             const SizedBox(height: 24),
-            
             _buildTabNavigation(),
             const SizedBox(height: 16),
-            
-            _selectedTab == 0
-                ? _buildTaskCompletionTab()
-                : _selectedTab == 1
-                ? _buildTimeTrackingTab()
-                : _buildProductivityTrendTab(),
+            _buildTabContent(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildTabContent() {
+    if (_selectedTab == 0) {
+      return _buildTaskCompletionTab();
+    } else if (_selectedTab == 1) {
+      return _buildTimeTrackingTab();
+    } else {
+      return _buildProductivityTrendTab();
+    }
   }
 
   Widget _buildProductivityScoreCard() {
@@ -113,7 +116,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.amber.withOpacity(0.3),
+              color: Colors.amber.withValues(alpha: 0.3),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -132,7 +135,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
                     Text(
                       'Productivity Score',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -151,7 +154,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text('📈', style: TextStyle(fontSize: 32)),
@@ -179,7 +182,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
       children: [
         Text(
           label,
-          style: TextStyle(color: color.withOpacity(0.8), fontSize: 11),
+          style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 11),
         ),
         const SizedBox(height: 4),
         Text(
@@ -279,17 +282,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? Colors.amber[50] : Colors.transparent,
-            borderRadius: tabIndex == 0
-                ? const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                  )
-                : tabIndex == 2
-                ? const BorderRadius.only(
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  )
-                : BorderRadius.zero,
+            borderRadius: BorderRadius.zero,
             border: Border(
               bottom: BorderSide(
                 color: isSelected ? Colors.amber : Colors.transparent,
@@ -340,7 +333,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Chart
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -372,7 +364,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
                             Stack(
                               alignment: Alignment.bottomCenter,
                               children: [
-                                // Background bar
                                 Container(
                                   width: double.infinity,
                                   height: maxHeight * 0.8,
@@ -385,7 +376,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
                                     ),
                                   ),
                                 ),
-                                // Completed bar
                                 Container(
                                   width: double.infinity,
                                   height:
@@ -405,7 +395,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.amber.withOpacity(0.2),
+                                        color: Colors.amber.withValues(alpha: 0.2),
                                         blurRadius: 4,
                                       ),
                                     ],
@@ -445,7 +435,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Summary Stats
           _buildTaskStats(data),
           const SizedBox(height: 24),
         ],
@@ -453,7 +442,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
     );
   }
 
-  Widget _buildTaskStats(List<dynamic> data) {
+  Widget _buildTaskStats(List<Map<String, dynamic>> data) {
     int totalTasks = 0;
     int totalCompleted = 0;
 
@@ -511,7 +500,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Area Chart representation
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -532,7 +520,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Time entries
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -552,7 +539,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
                     : _selectedPeriod == 'Month'
                     ? item['week']
                     : item['month'];
-                return _buildTimeEntry(label ?? '', hours);
+                return _buildTimeEntry(label?.toString() ?? '', hours);
               }),
             ],
           ),
@@ -647,7 +634,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Trend Chart
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -694,7 +680,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.purple.withOpacity(0.2),
+                                    color: Colors.purple.withValues(alpha: 0.2),
                                     blurRadius: 4,
                                   ),
                                 ],
@@ -734,7 +720,6 @@ class _ProductivityChartState extends State<ProductivityChart> {
             ),
           ),
           const SizedBox(height: 24),
-          // Key Metrics
           const Text(
             'Key Metrics',
             style: TextStyle(
@@ -792,9 +777,9 @@ class _ProductivityChartState extends State<ProductivityChart> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,9 +817,9 @@ class _ProductivityChartState extends State<ProductivityChart> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -869,7 +854,7 @@ class _ProductivityChartState extends State<ProductivityChart> {
 }
 
 class LineChartPainter extends CustomPainter {
-  final List<dynamic> data;
+  final List<Map<String, dynamic>> data;
 
   LineChartPainter(this.data);
 
@@ -885,7 +870,7 @@ class LineChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final Paint fillPaint = Paint()
-      ..color = Colors.amber.withOpacity(0.1)
+      ..color = Colors.amber.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     // Draw grid lines
@@ -897,15 +882,11 @@ class LineChartPainter extends CustomPainter {
     // Calculate points
     List<Offset> points = [];
     double maxHours = 10;
-
-    // Guard against insufficient data points to avoid division by zero.
     int pointCount = data.length;
-    if (pointCount == 0) {
-      // No data to draw.
-    } else {
+
+    if (pointCount > 0) {
       for (int i = 0; i < pointCount; i++) {
         final hours = (data[i]['hours'] as double) / maxHours;
-        // When only one point, place it in the middle of the canvas.
         final x = pointCount > 1
             ? (size.width / (pointCount - 1)) * i
             : size.width / 2;
@@ -929,25 +910,25 @@ class LineChartPainter extends CustomPainter {
       for (int i = 0; i < points.length - 1; i++) {
         canvas.drawLine(points[i], points[i + 1], linePaint);
       }
-    }
 
-    // Draw points
-    for (var point in points) {
-      canvas.drawCircle(
-        point,
-        5,
-        Paint()
-          ..color = Colors.amber
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawCircle(
-        point,
-        5,
-        Paint()
-          ..color = Colors.white
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke,
-      );
+      // Draw points
+      for (var point in points) {
+        canvas.drawCircle(
+          point,
+          5,
+          Paint()
+            ..color = Colors.amber
+            ..style = PaintingStyle.fill,
+        );
+        canvas.drawCircle(
+          point,
+          5,
+          Paint()
+            ..color = Colors.white
+            ..strokeWidth = 2
+            ..style = PaintingStyle.stroke,
+        );
+      }
     }
   }
 

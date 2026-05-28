@@ -10,27 +10,41 @@ class NewLeaveScreen extends StatefulWidget {
 
 class _NewLeaveScreenState extends State<NewLeaveScreen> {
   String selectedLeaveType = "Casual";
-  String leaveCause = "Trip to Cannes";
-  DateTime fromDate = DateTime(2020, 12, 21);
-  TimeOfDay fromTime = const TimeOfDay(hour: 9, minute: 30);
-  DateTime toDate = DateTime(2021, 1, 8);
-  TimeOfDay toTime = const TimeOfDay(hour: 18, minute: 30);
-  DateTime selectedMonth = DateTime(2020, 12);
+  String selectedDuration = "Full Day";
+  DateTime? singleDate;
+  DateTime? fromDate;
+  DateTime? toDate;
+  String reasonText = "";
+  final TextEditingController reasonController = TextEditingController();
 
-  int get totalDays => toDate.difference(fromDate).inDays + 1;
+  @override
+  void initState() {
+    super.initState();
+    reasonController.addListener(() {
+      setState(() {
+        reasonText = reasonController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    reasonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FB),
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
@@ -40,7 +54,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
           ),
         ),
       ),
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -55,34 +69,290 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
                   color: Color(0xFF1E202B),
                 ),
               ),
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.05),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildLeaveTypeSelector(),
-                      const Divider(height: 1),
-                      _buildCauseField(),
-                      const Divider(height: 1),
-                      _buildFromDateTimeSelector(),
-                      const Divider(height: 1),
-                      _buildToDateTimeSelector(),
-                    ],
-                  ),
+              const SizedBox(height: 4),
+              const Text(
+                "Apply for leave",
+                style: TextStyle(fontSize: 16, color: Color(0xFF8B8B9E)),
+              ),
+              const SizedBox(height: 30),
+              // LEAVE TYPE SECTION
+              const Text(
+                "LEAVE TYPE",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B8B9E),
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 160,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildLeaveTypeCard("Casual", "🏖️"),
+                    const SizedBox(width: 16),
+                    _buildLeaveTypeCard("Sick", "🏥"),
+                    const SizedBox(width: 16),
+                    _buildLeaveTypeCard("Earned", "📅"),
+                    const SizedBox(width: 16),
+                    _buildLeaveTypeCard("Maternity", "👶"),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              // DURATION SECTION
+              const Text(
+                "DURATION",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B8B9E),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildDurationOption("Full Day", "🌞"),
+              const SizedBox(height: 12),
+              _buildDurationOption("Half Day", "🌤️"),
+              const SizedBox(height: 12),
+              _buildDurationOption("Multiple Days", "📅"),
+              const SizedBox(height: 30),
+              // DATE SECTION
+              const Text(
+                "DATE",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B8B9E),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Show single date picker for Full Day and Half Day
+              if (selectedDuration != "Multiple Days") ...[
+                GestureDetector(
+                  onTap: _pickSingleDate,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today,
+                            color: Color(0xFF8B8B9E),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Date",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8B8B9E),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                singleDate != null
+                                    ? DateFormat(
+                                        'MMM dd, yyyy',
+                                      ).format(singleDate!)
+                                    : "Tap to select",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: singleDate != null
+                                      ? Colors.black
+                                      : Colors.grey.shade400,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey.shade300),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else ...[
+                // Show two date pickers for Multiple Days
+                GestureDetector(
+                  onTap: _pickFromDate,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today,
+                            color: Color(0xFF8B8B9E),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "From Date",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8B8B9E),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                fromDate != null
+                                    ? DateFormat(
+                                        'MMM dd, yyyy',
+                                      ).format(fromDate!)
+                                    : "Tap to select",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: fromDate != null
+                                      ? Colors.black
+                                      : Colors.grey.shade400,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey.shade300),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _pickToDate,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today,
+                            color: Color(0xFF8B8B9E),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "To Date",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8B8B9E),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                toDate != null
+                                    ? DateFormat('MMM dd, yyyy').format(toDate!)
+                                    : "Tap to select",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: toDate != null
+                                      ? Colors.black
+                                      : Colors.grey.shade400,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey.shade300),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 30),
+              // REASON FOR LEAVE SECTION
+              const Text(
+                "REASON FOR LEAVE",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B8B9E),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    TextField(
+                      controller: reasonController,
+                      maxLength: 300,
+                      maxLines: 6,
+                      decoration: InputDecoration(
+                        hintText: "Describe your reason here...",
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(16),
+                        counterText: "",
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      right: 16,
+                      child: Text(
+                        "${reasonText.length}/300",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              // SUBMIT BUTTON
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -94,9 +364,9 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
                     ),
                   ),
                   onPressed: _submitLeaveRequest,
-                  child: Text(
-                    "Apply for $totalDays Days Leave",
-                    style: const TextStyle(
+                  child: const Text(
+                    "Submit Leave Request",
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -104,7 +374,7 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -112,250 +382,219 @@ class _NewLeaveScreenState extends State<NewLeaveScreen> {
     );
   }
 
+  Widget _buildLeaveTypeCard(String type, String emoji) {
+    bool isSelected = selectedLeaveType == type;
+    return GestureDetector(
+      onTap: () => setState(() => selectedLeaveType = type),
+      child: Container(
+        width: 140,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: isSelected ? const Color(0xFFC89D5C) : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFC89D5C).withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 12),
+            Text(
+              type,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? const Color(0xFFC89D5C)
+                    : const Color(0xFF8B8B9E),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDurationOption(String duration, String emoji) {
+    bool isSelected = selectedDuration == duration;
+    return GestureDetector(
+      onTap: () {
+        setState(() => selectedDuration = duration);
+        // Clear dates when changing duration
+        if (duration == "Multiple Days") {
+          singleDate = null;
+        } else {
+          fromDate = null;
+          toDate = null;
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: isSelected ? const Color(0xFF2563EB) : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                duration,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFF8B8B9E),
+                ),
+              ),
+            ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF2563EB)
+                      : Colors.grey.shade300,
+                  width: 2,
+                ),
+                color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 12, color: Colors.white)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickSingleDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: singleDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && picked != singleDate) {
+      setState(() {
+        singleDate = picked;
+      });
+    }
+  }
+
+  Future<void> _pickFromDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: fromDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        fromDate = picked;
+        // Reset toDate if it's before fromDate
+        if (toDate != null && toDate!.isBefore(fromDate!)) {
+          toDate = null;
+        }
+      });
+    }
+  }
+
+  Future<void> _pickToDate() async {
+    if (fromDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select From Date first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: toDate ?? fromDate!,
+      firstDate: fromDate!,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        toDate = picked;
+      });
+    }
+  }
+
   void _submitLeaveRequest() {
+    // Validation
+    if (selectedDuration == "Multiple Days") {
+      if (fromDate == null || toDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select both From Date and To Date'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    } else {
+      if (singleDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a date'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
+    String message = '';
+    if (selectedDuration == "Multiple Days") {
+      final daysDifference = toDate!.difference(fromDate!).inDays + 1;
+      message =
+          'Leave request submitted!\nType: $selectedLeaveType\nFrom: ${DateFormat("MMM dd, yyyy").format(fromDate!)}\nTo: ${DateFormat("MMM dd, yyyy").format(toDate!)}\nTotal Days: $daysDifference';
+    } else {
+      message =
+          'Leave request submitted!\nType: $selectedLeaveType\nDate: ${DateFormat("MMM dd, yyyy").format(singleDate!)}';
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Leave request submitted for $totalDays days!'),
+        content: Text(message),
         backgroundColor: Colors.green,
+        duration: const Duration(seconds: 3),
       ),
     );
+
     Navigator.pop(context);
-  }
-
-  Widget _buildLeaveTypeSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.grid_view_rounded, color: Color(0xFF5A67D8)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Leave Type",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: selectedLeaveType,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: ['Casual', 'Sick', 'Earned', 'Maternity'].map((type) {
-                      return DropdownMenuItem(value: type, child: Text(type));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => selectedLeaveType = value ?? 'Casual');
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCauseField() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.edit_rounded, color: Color(0xFF5A67D8)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Reason",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter reason...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  onChanged: (value) => leaveCause = value,
-                  controller: TextEditingController(text: leaveCause),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFromDateTimeSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "From Date & Time",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: fromDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) setState(() => fromDate = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      DateFormat('MMM dd, yyyy').format(fromDate),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    TimeOfDay? picked = await showTimePicker(
-                      context: context,
-                      initialTime: fromTime,
-                    );
-                    if (picked != null) setState(() => fromTime = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      fromTime.format(context),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToDateTimeSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5A67D8).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.arrow_right_alt, color: Color(0xFF5A67D8)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "To Date & Time",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: toDate,
-                      firstDate: fromDate,
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) setState(() => toDate = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      DateFormat('MMM dd, yyyy').format(toDate),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    TimeOfDay? picked = await showTimePicker(
-                      context: context,
-                      initialTime: toTime,
-                    );
-                    if (picked != null) setState(() => toTime = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      toTime.format(context),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

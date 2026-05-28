@@ -14,13 +14,11 @@ class AttendanceController extends GetxController {
   void fetchAttendance() {
     isLoading(true);
     try {
-      // API call करें
-      // यहाँ आपका API integration code आएगा
       attendanceList.addAll([
         Attendance(
           id: '1',
           employeeId: 'EMP001',
-          employeeName: 'राज कुमार',
+          employeeName: 'Rajdeep Maurya',
           date: DateTime.now(),
           checkIn: '09:00 AM',
           checkOut: '06:00 PM',
@@ -73,8 +71,7 @@ class Attendance {
   DateTime date;
   String checkIn;
   String checkOut;
-  String status; // Present, Absent, Leave, Holiday
-
+  String status;
   Attendance({
     required this.id,
     required this.employeeId,

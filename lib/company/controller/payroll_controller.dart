@@ -15,7 +15,6 @@ class PayrollController extends GetxController {
   void fetchPayroll() {
     isLoading(true);
     try {
-      // API call करें
       payrollList.addAll([
         Payroll(
           id: 'P001',
@@ -180,7 +179,7 @@ class Payroll {
   double taxes;
   double totalSalary;
   DateTime paymentDate;
-  String status; // Pending, Processed, Paid
+  String status;
 
   Payroll({
     required this.id,

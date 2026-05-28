@@ -1,149 +1,161 @@
 import 'package:get/get.dart';
+import '../services/api_service.dart';
 
 class LeaveController extends GetxController {
-  var leaveList = <Leave>[].obs;
+  final ApiService apiService = ApiService();
+
+  var leaves = <dynamic>[].obs;
   var isLoading = false.obs;
-  var selectedStatus = 'All'.obs;
+  var errorMessage = ''.obs;
+  var selectedLeave = Rxn<Map<String, dynamic>>();
 
   @override
   void onInit() {
     super.onInit();
-    fetchLeaves();
+    fetchAllLeaves();
   }
 
-  void fetchLeaves() {
-    isLoading(true);
+  Future<void> fetchAllLeaves() async {
     try {
-      // API call करें
-      leaveList.addAll([
-        Leave(
-          id: 'L001',
-          employeeId: 'EMP001',
-          employeeName: 'राज कुमार',
-          leaveType: 'Casual',
-          startDate: DateTime.now().add(Duration(days: 2)),
-          endDate: DateTime.now().add(Duration(days: 4)),
-          numberOfDays: 3,
-          reason: 'Personal work',
-          status: 'Pending',
-          appliedDate: DateTime.now(),
-        ),
-        Leave(
-          id: 'L002',
-          employeeId: 'EMP002',
-          employeeName: 'प्रिया शर्मा',
-          leaveType: 'Sick',
-          startDate: DateTime.now(),
-          endDate: DateTime.now(),
-          numberOfDays: 1,
-          reason: 'Not feeling well',
-          status: 'Approved',
-          appliedDate: DateTime.now().subtract(Duration(days: 1)),
-        ),
-      ]);
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.getAllLeaves();
+      leaves.value = response;
+
+      if (leaves.isEmpty) {
+        errorMessage.value = 'No leave requests found';
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to fetch leaves: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
     } finally {
-      isLoading(false);
+      isLoading.value = false;
     }
   }
 
-  void applyLeave(Leave leave) {
+  Future<void> fetchLeaveById(String leaveId) async {
     try {
-      leaveList.add(leave);
-      Get.snackbar('Success', 'Leave application submitted');
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.getLeaveById(leaveId);
+      selectedLeave.value = response;
     } catch (e) {
-      Get.snackbar('Error', 'Failed to apply leave: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void approveLeave(String leaveId) {
+  Future<void> requestLeave({
+    required String employeeId,
+    required String startDate,
+    required String endDate,
+    required String type,
+  }) async {
     try {
-      final index = leaveList.indexWhere((l) => l.id == leaveId);
-      if (index != -1) {
-        leaveList[index].status = 'Approved';
-        leaveList.refresh();
-        Get.snackbar('Success', 'Leave approved');
-      }
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      await apiService.requestLeave(
+        employeeId: employeeId,
+        startDate: startDate,
+        endDate: endDate,
+        type: type,
+      );
+      await fetchAllLeaves();
+      Get.snackbar('✅ Success', 'Leave request submitted successfully!');
+      Get.back();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to approve leave: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void rejectLeave(String leaveId, String reason) {
+  Future<void> approveLeave({
+    required String leaveId,
+    required String adminComment,
+  }) async {
     try {
-      final index = leaveList.indexWhere((l) => l.id == leaveId);
-      if (index != -1) {
-        leaveList[index].status = 'Rejected';
-        leaveList.refresh();
-        Get.snackbar('Success', 'Leave rejected');
-      }
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      await apiService.updateLeaveStatus(
+        leaveId: leaveId,
+        status: 'approved',
+        adminComment: adminComment,
+      );
+      await fetchAllLeaves();
+
+      Get.snackbar('✅ Success', 'Leave approved!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to reject leave: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void cancelLeave(String leaveId) {
+  Future<void> rejectLeave({
+    required String leaveId,
+    required String adminComment,
+  }) async {
     try {
-      leaveList.removeWhere((l) => l.id == leaveId);
-      Get.snackbar('Success', 'Leave cancelled');
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      await apiService.updateLeaveStatus(
+        leaveId: leaveId,
+        status: 'rejected',
+        adminComment: adminComment,
+      );
+      await fetchAllLeaves();
+
+      Get.snackbar('✅ Success', 'Leave rejected!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to cancel leave: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void filterByStatus(String status) {
-    selectedStatus(status);
-  }
+  Future<void> deleteLeave(String leaveId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-  List<Leave> getFilteredLeaves() {
-    if (selectedStatus.value == 'All') {
-      return leaveList;
+      await apiService.deleteLeave(leaveId);
+      await fetchAllLeaves();
+      Get.snackbar('✅ Success', 'Leave deleted!');
+    } catch (e) {
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
-    return leaveList
-        .where((leave) => leave.status == selectedStatus.value)
-        .toList();
   }
 
-  int getRemainingLeaves(String employeeId, String leaveType) {
-    // Implement logic to calculate remaining leaves
-    return 10; // Example
+  String getStatusBadge(String status) {
+    const statusMap = {
+      'pending': '⏳ Pending',
+      'approved': '✅ Approved',
+      'rejected': '❌ Rejected',
+    };
+    return statusMap[status] ?? status;
   }
 
-  int getLeaveTaken(String employeeId, String leaveType) {
-    return leaveList
-        .where(
-          (l) =>
-              l.employeeId == employeeId &&
-              l.leaveType == leaveType &&
-              l.status == 'Approved',
-        )
-        .fold(0, (sum, leave) => sum + leave.numberOfDays);
+  String getLeaveTypeLabel(String type) {
+    const typeMap = {
+      'vacation': '🏖️ Vacation',
+      'sick': '🏥 Sick Leave',
+      'personal': '🏠 Personal',
+      'other': '📋 Other',
+    };
+    return typeMap[type] ?? type;
   }
-}
-
-class Leave {
-  String id;
-  String employeeId;
-  String employeeName;
-  String leaveType; // Casual, Sick, Earned, etc.
-  DateTime startDate;
-  DateTime endDate;
-  int numberOfDays;
-  String reason;
-  String status; // Pending, Approved, Rejected
-  DateTime appliedDate;
-
-  Leave({
-    required this.id,
-    required this.employeeId,
-    required this.employeeName,
-    required this.leaveType,
-    required this.startDate,
-    required this.endDate,
-    required this.numberOfDays,
-    required this.reason,
-    required this.status,
-    required this.appliedDate,
-  });
 }

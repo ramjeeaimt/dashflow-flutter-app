@@ -12,19 +12,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Roles & Permissions',
       theme: ThemeData(primarySwatch: Colors.purple, useMaterial3: true),
-      home: const RolesPermissionsScreen(),
+      home: RolesPermissionsPage(),
     );
   }
 }
 
-class RolesPermissionsScreen extends StatefulWidget {
-  const RolesPermissionsScreen({super.key});
+class RolesPermissionsPage extends StatefulWidget {
+  const RolesPermissionsPage({super.key});
 
   @override
-  State<RolesPermissionsScreen> createState() => _RolesPermissionsScreenState();
+  State<RolesPermissionsPage> createState() => _RolesPermissionsScreenState();
 }
 
-class _RolesPermissionsScreenState extends State<RolesPermissionsScreen> {
+class _RolesPermissionsScreenState extends State<RolesPermissionsPage> {
   int _selectedTab = 0;
   String? _selectedRole;
 
@@ -99,6 +99,7 @@ class _RolesPermissionsScreenState extends State<RolesPermissionsScreen> {
     super.initState();
     _selectedRole = roles[0].id;
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -335,6 +336,7 @@ class _RolesPermissionsScreenState extends State<RolesPermissionsScreen> {
       ),
     );
   }
+
   Widget _buildPermissionsTab() {
     final currentRole = roles.firstWhere((r) => r.id == _selectedRole);
     return Padding(
@@ -451,6 +453,7 @@ class _RolesPermissionsScreenState extends State<RolesPermissionsScreen> {
       ),
     );
   }
+
   Widget _buildPermissionItem(
     PermissionModel permission,
     int index,
@@ -510,6 +513,7 @@ class _RolesPermissionsScreenState extends State<RolesPermissionsScreen> {
     );
   }
 }
+
 class RoleModel {
   final String id;
   final String name;
@@ -528,6 +532,7 @@ class RoleModel {
     required this.permissions,
   });
 }
+
 class PermissionModel {
   final String name;
   final String description;

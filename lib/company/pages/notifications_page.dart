@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 void main() {
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
@@ -9,15 +11,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Notification Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const NotificationPage(),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: NotificationsPage(),
     );
   }
 }
-class NotificationPage extends StatelessWidget {
-  const NotificationPage({super.key});
+
+class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({super.key});
   final List<Map<String, dynamic>> notifications = const [
     {
       'title': 'New Message',
@@ -55,10 +56,7 @@ class NotificationPage extends StatelessWidget {
         title: const Text('Notifications'),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.done_all),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.done_all), onPressed: () {}),
         ],
       ),
       body: ListView.builder(
@@ -77,10 +75,7 @@ class NotificationPage extends StatelessWidget {
               leading: CircleAvatar(
                 backgroundColor: notification['color'],
                 radius: 28,
-                child: Icon(
-                  notification['icon'],
-                  color: Colors.white,
-                ),
+                child: Icon(notification['icon'], color: Colors.white),
               ),
               title: Text(
                 notification['title'],
@@ -95,10 +90,7 @@ class NotificationPage extends StatelessWidget {
               ),
               trailing: Text(
                 notification['time'],
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ),
           );
@@ -107,18 +99,12 @@ class NotificationPage extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
             label: 'Notifications',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

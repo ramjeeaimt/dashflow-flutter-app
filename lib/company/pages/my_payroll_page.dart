@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class PayrollPage extends StatefulWidget {
-  const PayrollPage({super.key});
+class MyPayrollPage extends StatefulWidget {
+  const MyPayrollPage({super.key});
 
   @override
-  State<PayrollPage> createState() => _PayrollPageState();
+  State<MyPayrollPage> createState() => _PayrollPageState();
 }
 
-class _PayrollPageState extends State<PayrollPage> {
+class _PayrollPageState extends State<MyPayrollPage> {
   int _selectedTab = 0;
   final List<String> _tabs = ['Overview', 'Pay Slips', 'Advances'];
   int _selectedPaySlipIndex = 0;
 
-  
   final Map<String, dynamic> payrollData = {
     'salaryInfo': {
       'ctc': 60000.00,
@@ -221,7 +220,6 @@ class _PayrollPageState extends State<PayrollPage> {
             ),
           ),
 
-          
           Expanded(
             child: _selectedTab == 0
                 ? _buildOverviewTab()
@@ -241,7 +239,6 @@ class _PayrollPageState extends State<PayrollPage> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildSalaryCard(),
@@ -249,7 +246,6 @@ class _PayrollPageState extends State<PayrollPage> {
 
           const SizedBox(height: 24),
 
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -313,7 +309,6 @@ class _PayrollPageState extends State<PayrollPage> {
 
           const SizedBox(height: 24),
 
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildCurrentPayslipCard(),
@@ -321,7 +316,6 @@ class _PayrollPageState extends State<PayrollPage> {
 
           const SizedBox(height: 24),
 
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildPaymentInfoCard(),

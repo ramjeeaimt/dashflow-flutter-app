@@ -4,59 +4,51 @@ class CompanyProfilePage extends StatefulWidget {
   const CompanyProfilePage({super.key});
 
   @override
-  State<CompanyProfilePage> createState() => _CompanyProfilePageState();
+  State<CompanyProfilePage> createState() => _CompanyProfilePage();
 }
 
-class _CompanyProfilePageState extends State<CompanyProfilePage> {
+class _CompanyProfilePage extends State<CompanyProfilePage> {
   bool _isFollowing = false;
 
- 
   final Map<String, dynamic> companyData = {
-    'name': 'TechFlow Solutions',
+    'name': 'Difmo Solutions Technologies Pvt. Ltd.',
     'logo': 'https://via.placeholder.com/120',
     'cover': 'https://via.placeholder.com/400x200',
-    'tagline': 'Innovative Technology Solutions',
+    'tagline': 'Difmo  Technology',
     'industry': 'Information Technology',
-    'founded': '2015',
-    'headquarters': 'San Francisco, CA',
-    'employees': '500+',
-    'website': 'www.techflowsolutions.com',
-    'email': 'contact@techflow.com',
-    'phone': '+1 (415) 555-0123',
+    'founded': '2025',
+    'headquarters': '4/37 Vibhav khand, Gomti Nagar ,Lucknow,',
+    'employees': '30+',
+    'website': 'www.difmo.com',
+    'email': 'info@Difmo.com',
+    'phone': '+91 9519202509',
     'about':
-        'TechFlow Solutions is a leading provider of innovative technology solutions for enterprises worldwide. We specialize in cloud computing, AI integration, and digital transformation services. Our dedicated team of experts works tirelessly to deliver cutting-edge solutions that drive business growth.',
+        'Difmo  Solutions is a leading provider of Difmo technology  for enterprises worldwide. We specialize in cloud computing, AI integration, and digital transformation services. Our dedicated team of experts works tirelessly to deliver cutting-edge solutions that drive business growth.',
     'stats': [
-      {'label': 'Employees', 'value': '500+'},
-      {'label': 'Countries', 'value': '25+'},
-      {'label': 'Projects', 'value': '1000+'},
-      {'label': 'Clients', 'value': '300+'},
+      {'label': 'Employees', 'value': '30+'},
+      {'label': 'Countries', 'value': '2+'},
+      {'label': 'Projects', 'value': '10+'},
+      {'label': 'Clients', 'value': '15+'},
     ],
     'services': [
-      'Cloud Solutions',
-      'AI & Machine Learning',
-      'Data Analytics',
-      'Mobile Development',
+      'Cloud Computing',
+      'AI Integration',
+      'Mobile App Development',
       'Web Development',
-      'IT Consulting',
     ],
+
     'locations': [
       {
-        'city': 'San Francisco',
-        'country': 'USA',
-        'address': '123 Tech Street, San Francisco, CA 94105',
-        'phone': '+1 (415) 555-0123',
-      },
-      {
-        'city': 'London',
-        'country': 'UK',
-        'address': '456 Innovation Drive, London, UK',
-        'phone': '+44 20 7946 0958',
-      },
-      {
-        'city': 'Mumbai',
+        'city': 'Lucknow',
         'country': 'India',
-        'address': '789 Business Park, Mumbai, India',
-        'phone': '+91 22 2341 3456',
+        'address': '4/37 Vibhav khand, Gomti Nagar, Lucknow',
+        'phone': '+91 9519202509',
+      },
+      {
+        'city': 'Kanpur',
+        'country': 'India',
+        'address': 'Kanpur',
+        'phone': '+91 9519202509',
       },
     ],
   };
@@ -85,7 +77,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            
             Stack(
               children: [
                 Container(
@@ -108,7 +99,7 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
                     },
                   ),
                 ),
-               
+
                 Positioned(
                   bottom: -40,
                   left: 20,
@@ -144,7 +135,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 50),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -198,7 +188,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: GridView.builder(
@@ -219,7 +208,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -266,7 +254,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildSectionCard(
@@ -296,7 +283,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildSectionCard(
@@ -313,7 +299,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildSectionCard(
@@ -329,7 +314,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildSectionCard(
@@ -352,7 +336,6 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             ),
             const SizedBox(height: 28),
 
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -591,4 +574,3 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
     ).showSnackBar(SnackBar(content: Text('Calling $phone')));
   }
 }
-  

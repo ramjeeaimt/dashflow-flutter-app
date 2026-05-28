@@ -1,129 +1,140 @@
 import 'package:get/get.dart';
+import '../services/api_service.dart';
 
 class EmployeeController extends GetxController {
-  var employeeList = <Employee>[].obs;
-  var filteredEmployeeList = <Employee>[].obs;
+  final ApiService apiService = ApiService();
+  var employees = <dynamic>[].obs;
   var isLoading = false.obs;
-  var searchQuery = ''.obs;
-
+  var errorMessage = ''.obs;
+  var selectedEmployee = Rxn<Map<String, dynamic>>();
   @override
   void onInit() {
     super.onInit();
-    fetchEmployees();
+    fetchAllEmployees();
   }
 
-  void fetchEmployees() {
-    isLoading(true);
+  Future<void> fetchAllEmployees() async {
     try {
-      // API call करें
-      employeeList.addAll([
-        Employee(
-          id: 'EMP001',
-          name: 'राज कुमार',
-          email: 'raj@example.com',
-          phone: '9876543210',
-          department: 'IT',
-          designation: 'Developer',
-          salary: 50000,
-          joinDate: DateTime(2022, 01, 15),
-        ),
-        Employee(
-          id: 'EMP002',
-          name: 'प्रिया शर्मा',
-          email: 'priya@example.com',
-          phone: '9876543211',
-          department: 'HR',
-          designation: 'HR Manager',
-          salary: 45000,
-          joinDate: DateTime(2021, 06, 20),
-        ),
-      ]);
-      filteredEmployeeList.value = employeeList;
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to fetch employees: $e');
-    } finally {
-      isLoading(false);
-    }
-  }
+      isLoading.value = true;
+      errorMessage.value = '';
 
-  void addEmployee(Employee employee) {
-    try {
-      employeeList.add(employee);
-      filteredEmployeeList.value = employeeList;
-      Get.snackbar('Success', 'Employee added successfully');
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to add employee: $e');
-    }
-  }
+      final response = await apiService.getAllUsers();
+      employees.value = response;
 
-  void updateEmployee(String id, Employee updatedEmployee) {
-    try {
-      final index = employeeList.indexWhere((emp) => emp.id == id);
-      if (index != -1) {
-        employeeList[index] = updatedEmployee;
-        employeeList.refresh();
-        filteredEmployeeList.value = employeeList;
-        Get.snackbar('Success', 'Employee updated successfully');
+      if (employees.isEmpty) {
+        errorMessage.value = 'No employees found';
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update employee: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void deleteEmployee(String id) {
+  Future<void> fetchEmployeeById(String employeeId) async {
     try {
-      employeeList.removeWhere((emp) => emp.id == id);
-      filteredEmployeeList.value = employeeList;
-      Get.snackbar('Success', 'Employee deleted successfully');
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.getUserById(employeeId);
+      selectedEmployee.value = response;
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete employee: $e');
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void searchEmployee(String query) {
-    searchQuery(query);
-    if (query.isEmpty) {
-      filteredEmployeeList.value = employeeList;
-    } else {
-      filteredEmployeeList.value = employeeList
-          .where(
-            (emp) =>
-                emp.name.toLowerCase().contains(query.toLowerCase()) ||
-                emp.id.contains(query),
-          )
-          .toList();
+  Future<void> createEmployee({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String role,
+    String? companyId,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.createUser(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        role: role,
+        companyId: companyId,
+      );
+      await fetchAllEmployees();
+
+      Get.snackbar('✅ Success', 'Employee created successfully!');
+      Get.back();
+    } catch (e) {
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void filterByDepartment(String department) {
-    if (department.isEmpty) {
-      filteredEmployeeList.value = employeeList;
-    } else {
-      filteredEmployeeList.value = employeeList
-          .where((emp) => emp.department == department)
-          .toList();
+  Future<void> updateEmployee({
+    required String employeeId,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String role,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      await apiService.updateUser(
+        userId: employeeId,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        role: role,
+      );
+      await fetchAllEmployees();
+      await fetchEmployeeById(employeeId);
+
+      Get.snackbar('✅ Success', 'Employee updated successfully!');
+      Get.back();
+    } catch (e) {
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
     }
   }
-}
 
-class Employee {
-  String id;
-  String name;
-  String email;
-  String phone;
-  String department;
-  String designation;
-  double salary;
-  DateTime joinDate;
+  Future<void> deleteEmployee(String employeeId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-  Employee({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.department,
-    required this.designation,
-    required this.salary,
-    required this.joinDate,
-  });
+      await apiService.deleteUser(employeeId);
+      await fetchAllEmployees();
+      Get.snackbar('✅ Success', 'Employee deleted successfully!');
+      Get.back();
+    } catch (e) {
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar('❌ Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  String getRoleLabel(String role) {
+    const roleMap = {
+      'admin': '👨‍💼 Admin',
+      'manager': '👔 Manager',
+      'employee': '👤 Employee',
+    };
+    return roleMap[role] ?? role;
+  }
 }

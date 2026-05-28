@@ -12,19 +12,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'User Permissions',
       theme: ThemeData(primarySwatch: Colors.indigo, useMaterial3: true),
-      home: const UserPermissionsScreen(),
+      home: UserPermissions(),
     );
   }
 }
 
-class UserPermissionsScreen extends StatefulWidget {
-  const UserPermissionsScreen({super.key});
+class UserPermissions extends StatefulWidget {
+  const UserPermissions({super.key});
 
   @override
-  State<UserPermissionsScreen> createState() => _UserPermissionsScreenState();
+  State<UserPermissions> createState() => _UserPermissions();
 }
 
-class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
+class _UserPermissions extends State<UserPermissions> {
   int _selectedTab = 0;
   String? _selectedUserId;
   String _searchQuery = '';
@@ -448,6 +448,7 @@ class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
       ),
     );
   }
+
   Widget _buildUserCard(UserModel user) {
     final isSelected = _selectedUserId == user.id;
     return GestureDetector(
@@ -579,6 +580,7 @@ class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
       ),
     );
   }
+
   Widget _buildPermissionsTab() {
     final currentUser = users.firstWhere((u) => u.id == _selectedUserId);
     return Padding(
@@ -792,8 +794,7 @@ class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
         ),
         const SizedBox(width: 8),
         GestureDetector(
-          onTap: () {
-          },
+          onTap: () {},
           child: Icon(
             permission.isGranted
                 ? Icons.toggle_on_outlined
@@ -806,6 +807,7 @@ class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
     );
   }
 }
+
 class UserModel {
   final String id;
   final String name;
@@ -829,6 +831,7 @@ class UserModel {
     required this.permissions,
   });
 }
+
 class UserPermissionModel {
   final String name;
   final String description;

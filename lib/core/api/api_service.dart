@@ -83,11 +83,9 @@ class ApiService {
     );
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(url, headers: {'Content-Type': 'application/json'}, body: body)
+          .timeout(const Duration(seconds: 10));
 
       _logResponse('POST', url, response);
 
@@ -135,9 +133,11 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> _performLocalBypassLogin(String email) async {
+  static Future<Map<String, dynamic>> _performLocalBypassLogin(
+    String email,
+  ) async {
     _logger.w('🔒 Triggering local bypass login for developer: $email');
-    
+
     final mockUser = {
       'id': 'self-user',
       '_id': 'self-user',
@@ -147,7 +147,9 @@ class ApiService {
       'email': email,
       'designation': 'Admin',
       'department': 'IT Department',
-      'roles': [{'name': 'Admin'}],
+      'roles': [
+        {'name': 'Admin'},
+      ],
       'status': 'active',
     };
 
@@ -160,7 +162,9 @@ class ApiService {
     await prefs.setString('token', mockResponseData['access_token'] as String);
     await prefs.setString('user', jsonEncode(mockUser));
 
-    _showBypassSnackBar('Login Bypass: Welcome back, ${mockUser['firstName']}! Mode: Admin Sim.');
+    _showBypassSnackBar(
+      'Login Bypass: Welcome back, ${mockUser['firstName']}! Mode: Admin Sim.',
+    );
 
     return mockResponseData;
   }
@@ -210,16 +214,21 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData) as Map<String, dynamic>;
-        
+
         // Cache the successful check-in state
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_mock_attendance_today_$employeeId', jsonEncode(data));
+        await prefs.setString(
+          'local_mock_attendance_today_$employeeId',
+          jsonEncode(data),
+        );
         return data;
       } else {
         throw Exception('Check-in failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      _logger.w('⚠️ Attendance checkIn failure (network/403) - Simulating locally: $e');
+      _logger.w(
+        '⚠️ Attendance checkIn failure (network/403) - Simulating locally: $e',
+      );
       try {
         final mockAttendance = {
           'id': 'mock-att-${DateTime.now().millisecondsSinceEpoch}',
@@ -237,11 +246,14 @@ class ApiService {
           'status': 'checked-in',
         };
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_mock_attendance_today_$employeeId', jsonEncode(mockAttendance));
-        
+        await prefs.setString(
+          'local_mock_attendance_today_$employeeId',
+          jsonEncode(mockAttendance),
+        );
+
         _showBypassSnackBar(
-          isWorkFromHome 
-              ? 'Bypass: Checked In successfully (Work From Home)!' 
+          isWorkFromHome
+              ? 'Bypass: Checked In successfully (Work From Home)!'
               : 'Bypass: Checked In successfully (Office Mode)!',
         );
         return mockAttendance;
@@ -277,7 +289,7 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData) as Map<String, dynamic>;
-        
+
         // Remove or update cached check-in
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('local_mock_attendance_today_self');
@@ -288,7 +300,8 @@ class ApiService {
             final valStr = prefs.getString(key);
             if (valStr != null) {
               final val = jsonDecode(valStr);
-              if (val is Map && (val['id'] == attendanceId || val['_id'] == attendanceId)) {
+              if (val is Map &&
+                  (val['id'] == attendanceId || val['_id'] == attendanceId)) {
                 final Map<String, dynamic> updated = Map.from(val);
                 updated['checkOut'] = DateTime.now().toIso8601String();
                 updated['status'] = 'checked-out';
@@ -302,7 +315,9 @@ class ApiService {
         throw Exception('Check-out failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      _logger.w('⚠️ Attendance checkOut failure (network/403) - Simulating locally: $e');
+      _logger.w(
+        '⚠️ Attendance checkOut failure (network/403) - Simulating locally: $e',
+      );
       try {
         final prefs = await SharedPreferences.getInstance();
         // Look up the attendance in today cache
@@ -314,7 +329,8 @@ class ApiService {
             final valStr = prefs.getString(key);
             if (valStr != null) {
               final val = jsonDecode(valStr);
-              if (val is Map && (val['id'] == attendanceId || val['_id'] == attendanceId)) {
+              if (val is Map &&
+                  (val['id'] == attendanceId || val['_id'] == attendanceId)) {
                 targetKey = key;
                 cachedData = Map<String, dynamic>.from(val);
                 break;
@@ -322,25 +338,32 @@ class ApiService {
             }
           }
         }
-        
-        final updatedAttendance = cachedData ?? {
-          'id': attendanceId,
-          '_id': attendanceId,
-          'checkIn': DateTime.now().subtract(const Duration(hours: 8)).toIso8601String(),
-          'latitude': latitude,
-          'longitude': longitude,
-          'location': 'Unknown Location',
-          'notes': notes,
-        };
+
+        final updatedAttendance =
+            cachedData ??
+            {
+              'id': attendanceId,
+              '_id': attendanceId,
+              'checkIn': DateTime.now()
+                  .subtract(const Duration(hours: 8))
+                  .toIso8601String(),
+              'latitude': latitude,
+              'longitude': longitude,
+              'location': 'Unknown Location',
+              'notes': notes,
+            };
         updatedAttendance['checkOut'] = DateTime.now().toIso8601String();
         updatedAttendance['status'] = 'checked-out';
-        
+
         if (targetKey != null) {
           await prefs.setString(targetKey, jsonEncode(updatedAttendance));
         } else {
-          await prefs.setString('local_mock_attendance_today_self', jsonEncode(updatedAttendance));
+          await prefs.setString(
+            'local_mock_attendance_today_self',
+            jsonEncode(updatedAttendance),
+          );
         }
-        
+
         _showBypassSnackBar('Bypass: Checked Out successfully!');
         return updatedAttendance;
       } catch (fallbackError) {
@@ -368,14 +391,19 @@ class ApiService {
         final data = _extractData(responseData);
         if (data is Map<String, dynamic>) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('local_mock_attendance_today_$employeeId', jsonEncode(data));
+          await prefs.setString(
+            'local_mock_attendance_today_$employeeId',
+            jsonEncode(data),
+          );
           return data;
         }
         return null;
       } else {
         // Fetch from local cache if Vercel server returns errors
         final prefs = await SharedPreferences.getInstance();
-        final cachedStr = prefs.getString('local_mock_attendance_today_$employeeId');
+        final cachedStr = prefs.getString(
+          'local_mock_attendance_today_$employeeId',
+        );
         if (cachedStr != null) {
           final cached = jsonDecode(cachedStr);
           if (cached is Map<String, dynamic>) {
@@ -384,7 +412,9 @@ class ApiService {
             if (checkInStr != null) {
               final checkInDate = DateTime.parse(checkInStr).toLocal();
               final now = DateTime.now();
-              if (checkInDate.year == now.year && checkInDate.month == now.month && checkInDate.day == now.day) {
+              if (checkInDate.year == now.year &&
+                  checkInDate.month == now.month &&
+                  checkInDate.day == now.day) {
                 return cached;
               }
             }
@@ -393,10 +423,14 @@ class ApiService {
         return null;
       }
     } catch (e) {
-      _logger.w('⚠️ Failed to fetch today attendance - Fetching from local cache: $e');
+      _logger.w(
+        '⚠️ Failed to fetch today attendance - Fetching from local cache: $e',
+      );
       try {
         final prefs = await SharedPreferences.getInstance();
-        final cachedStr = prefs.getString('local_mock_attendance_today_$employeeId');
+        final cachedStr = prefs.getString(
+          'local_mock_attendance_today_$employeeId',
+        );
         if (cachedStr != null) {
           final cached = jsonDecode(cachedStr);
           if (cached is Map<String, dynamic>) {
@@ -404,7 +438,9 @@ class ApiService {
             if (checkInStr != null) {
               final checkInDate = DateTime.parse(checkInStr).toLocal();
               final now = DateTime.now();
-              if (checkInDate.year == now.year && checkInDate.month == now.month && checkInDate.day == now.day) {
+              if (checkInDate.year == now.year &&
+                  checkInDate.month == now.month &&
+                  checkInDate.day == now.day) {
                 return cached;
               }
             }
@@ -999,7 +1035,9 @@ class ApiService {
         final responseData = jsonDecode(response.body);
         return _extractData(responseData) as Map<String, dynamic>;
       } else {
-        _logger.w('⚠️ Server error ${response.statusCode} in updateTask - Simulating locally');
+        _logger.w(
+          '⚠️ Server error ${response.statusCode} in updateTask - Simulating locally',
+        );
         final prefs = await SharedPreferences.getInstance();
         if (status != null) {
           await prefs.setString('local_mock_task_status_$taskId', status);
@@ -1008,9 +1046,7 @@ class ApiService {
           await prefs.setString('local_mock_task_priority_$taskId', priority);
         }
 
-        _showBypassSnackBar(
-          'Simulated task update: status set to $status!',
-        );
+        _showBypassSnackBar('Simulated task update: status set to $status!');
 
         final Map<String, dynamic> res = {'id': taskId};
         if (status != null) res['status'] = status;

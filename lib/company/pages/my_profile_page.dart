@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 void main() {
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
@@ -9,13 +11,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'User Profile',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const ProfileScreen(),
+      home: const MyProfilePage(),
     );
   }
 }
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
- @override
+
+class MyProfilePage extends StatelessWidget {
+  const MyProfilePage({super.key});
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -75,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 4),             
+                  const SizedBox(height: 4),
                   Text(
                     '@sarahkumar',
                     style: TextStyle(
@@ -197,6 +200,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildInfoCard(String label, String value) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -221,6 +225,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildStatCard(String number, String label) {
     return Expanded(
       child: Container(
