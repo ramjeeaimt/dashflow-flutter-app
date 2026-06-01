@@ -105,10 +105,6 @@ class ApiService {
         }
         return data; // Return the inner data object which contains user info
       } else {
-        if (email.toLowerCase().trim() == 'ankgau8714@gmail.com') {
-          return await _performLocalBypassLogin(email);
-        }
-
         String errorMessage = 'Login failed';
         try {
           final errorData = jsonDecode(response.body);
@@ -124,45 +120,12 @@ class ApiService {
       }
     } catch (e) {
       _logger.e('❌ [API ERROR] login: $e');
-      if (email.toLowerCase().trim() == 'ankgau8714@gmail.com') {
-        return await _performLocalBypassLogin(email);
-      }
       // Rethrow cleanly if it's already an exception we created
       if (e.toString().startsWith('Exception: ')) {
         throw Exception(e.toString().replaceAll('Exception: ', ''));
       }
       throw Exception('Login error: $e');
     }
-  }
-
-  static Future<Map<String, dynamic>> _performLocalBypassLogin(String email) async {
-    _logger.w('🔒 Triggering local bypass login for developer: $email');
-    
-    final mockUser = {
-      'id': 'self-user',
-      '_id': 'self-user',
-      'firstName': 'Ankur',
-      'lastName': 'Gautam',
-      'name': 'Ankur Gautam',
-      'email': email,
-      'designation': 'Admin',
-      'department': 'IT Department',
-      'roles': [{'name': 'Admin'}],
-      'status': 'active',
-    };
-
-    final mockResponseData = {
-      'access_token': 'mock-token-12345-dev-bypass',
-      'user': mockUser,
-    };
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', mockResponseData['access_token'] as String);
-    await prefs.setString('user', jsonEncode(mockUser));
-
-    _showBypassSnackBar('Login Bypass: Welcome back, ${mockUser['firstName']}! Mode: Admin Sim.');
-
-    return mockResponseData;
   }
 
   static Future<void> _handleUnauthorized(http.Response response) async {
@@ -219,35 +182,8 @@ class ApiService {
         throw Exception('Check-in failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      _logger.w('⚠️ Attendance checkIn failure (network/403) - Simulating locally: $e');
-      try {
-        final mockAttendance = {
-          'id': 'mock-att-${DateTime.now().millisecondsSinceEpoch}',
-          '_id': 'mock-att-${DateTime.now().millisecondsSinceEpoch}',
-          'employeeId': employeeId,
-          'checkIn': DateTime.now().toIso8601String(),
-          'checkOut': null,
-          'latitude': latitude,
-          'longitude': longitude,
-          'location': location,
-          'notes': notes,
-          'isWorkFromHome': isWorkFromHome,
-          'isWfh': isWorkFromHome,
-          'workMode': isWorkFromHome ? 'wfh' : 'office',
-          'status': 'checked-in',
-        };
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_mock_attendance_today_$employeeId', jsonEncode(mockAttendance));
-        
-        _showBypassSnackBar(
-          isWorkFromHome 
-              ? 'Bypass: Checked In successfully (Work From Home)!' 
-              : 'Bypass: Checked In successfully (Office Mode)!',
-        );
-        return mockAttendance;
-      } catch (fallbackError) {
-        throw Exception('Check-in error: $e');
-      }
+      _logger.e('❌ [API ERROR] checkIn: $e');
+      throw Exception('Check-in error: $e');
     }
   }
 
@@ -302,50 +238,8 @@ class ApiService {
         throw Exception('Check-out failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      _logger.w('⚠️ Attendance checkOut failure (network/403) - Simulating locally: $e');
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        // Look up the attendance in today cache
-        String? targetKey;
-        Map<String, dynamic>? cachedData;
-        final keys = prefs.getKeys();
-        for (final key in keys) {
-          if (key.startsWith('local_mock_attendance_today_')) {
-            final valStr = prefs.getString(key);
-            if (valStr != null) {
-              final val = jsonDecode(valStr);
-              if (val is Map && (val['id'] == attendanceId || val['_id'] == attendanceId)) {
-                targetKey = key;
-                cachedData = Map<String, dynamic>.from(val);
-                break;
-              }
-            }
-          }
-        }
-        
-        final updatedAttendance = cachedData ?? {
-          'id': attendanceId,
-          '_id': attendanceId,
-          'checkIn': DateTime.now().subtract(const Duration(hours: 8)).toIso8601String(),
-          'latitude': latitude,
-          'longitude': longitude,
-          'location': 'Unknown Location',
-          'notes': notes,
-        };
-        updatedAttendance['checkOut'] = DateTime.now().toIso8601String();
-        updatedAttendance['status'] = 'checked-out';
-        
-        if (targetKey != null) {
-          await prefs.setString(targetKey, jsonEncode(updatedAttendance));
-        } else {
-          await prefs.setString('local_mock_attendance_today_self', jsonEncode(updatedAttendance));
-        }
-        
-        _showBypassSnackBar('Bypass: Checked Out successfully!');
-        return updatedAttendance;
-      } catch (fallbackError) {
-        throw Exception('Check-out error: $e');
-      }
+      _logger.e('❌ [API ERROR] checkOut: $e');
+      throw Exception('Check-out error: $e');
     }
   }
 
@@ -415,37 +309,7 @@ class ApiService {
     }
   }
 
-  static void _showBypassSnackBar(String message) {
-    try {
-      final context = navigatorKey.currentContext;
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.shield_outlined, color: Colors.amberAccent),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF2C5282),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    } catch (e) {
-      _logger.e('Error showing bypass snackbar: $e');
-    }
-  }
+
 
   static Future<List<dynamic>> getEmployees({String? userId}) async {
     String queryString = '';
@@ -466,90 +330,13 @@ class ApiService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData);
-        final List<dynamic> employeesList = List.from(data is List ? data : []);
-
-        final prefs = await SharedPreferences.getInstance();
-        final savedEmpListStr = prefs.getString('local_mock_employees') ?? '[]';
-        final List<dynamic> savedEmpList = jsonDecode(savedEmpListStr);
-        employeesList.addAll(savedEmpList);
-
-        return employeesList;
-      } else if (response.statusCode == 403) {
-        _logger.w(
-          '🔒 403 Forbidden in getEmployees - Loading logged-in user and mocks',
-        );
-        final prefs = await SharedPreferences.getInstance();
-        final List<dynamic> employeesList = [];
-
-        final userStr = prefs.getString('user');
-        if (userStr != null) {
-          try {
-            final userObj = jsonDecode(userStr);
-            if (userObj is Map<String, dynamic>) {
-              final Map<String, dynamic> mutableUser = Map.from(userObj);
-              if (mutableUser['firstName'] == null &&
-                  mutableUser['name'] != null) {
-                final names = (mutableUser['name'] as String).split(' ');
-                mutableUser['firstName'] = names.first;
-                mutableUser['lastName'] = names.length > 1
-                    ? names.sublist(1).join(' ')
-                    : '';
-              }
-              // If ID/designation/department is missing, ensure defaults
-              mutableUser['_id'] ??= mutableUser['id'] ?? 'self-user';
-              mutableUser['designation'] ??= 'Employee';
-              mutableUser['department'] ??= 'IT Department';
-              employeesList.add(mutableUser);
-            }
-          } catch (e) {
-            _logger.e('Error parsing logged-in user: $e');
-          }
-        }
-
-        final savedEmpListStr = prefs.getString('local_mock_employees') ?? '[]';
-        final List<dynamic> savedEmpList = jsonDecode(savedEmpListStr);
-        employeesList.addAll(savedEmpList);
-
-        _showBypassSnackBar(
-          'Employee Bypass: Loading personal record & local mock directory.',
-        );
-        return employeesList;
+        return data is List ? data : [];
       } else {
         throw Exception('Failed to fetch employees: ${response.statusCode}');
       }
     } catch (e) {
       _logger.e('❌ [API ERROR] getEmployees: $e');
-
-      // Attempt safe fallback in catch block
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final List<dynamic> employeesList = [];
-        final userStr = prefs.getString('user');
-        if (userStr != null) {
-          final userObj = jsonDecode(userStr);
-          if (userObj is Map<String, dynamic>) {
-            final Map<String, dynamic> mutableUser = Map.from(userObj);
-            if (mutableUser['firstName'] == null &&
-                mutableUser['name'] != null) {
-              final names = (mutableUser['name'] as String).split(' ');
-              mutableUser['firstName'] = names.first;
-              mutableUser['lastName'] = names.length > 1
-                  ? names.sublist(1).join(' ')
-                  : '';
-            }
-            mutableUser['_id'] ??= mutableUser['id'] ?? 'self-user';
-            mutableUser['designation'] ??= 'Employee';
-            mutableUser['department'] ??= 'IT Department';
-            employeesList.add(mutableUser);
-          }
-        }
-        final savedEmpListStr = prefs.getString('local_mock_employees') ?? '[]';
-        final List<dynamic> savedEmpList = jsonDecode(savedEmpListStr);
-        employeesList.addAll(savedEmpList);
-        return employeesList;
-      } catch (_) {
-        return [];
-      }
+      throw Exception('Failed to fetch employees: $e');
     }
   }
 
@@ -605,34 +392,13 @@ class ApiService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData);
-
-        if (data is List) {
-          final prefs = await SharedPreferences.getInstance();
-          final List<dynamic> mappedList = [];
-          for (var item in data) {
-            if (item is Map<String, dynamic>) {
-              final leaveId = item['_id'] ?? item['id']?.toString() ?? '';
-              final savedStatus = prefs.getString(
-                'local_mock_leave_status_$leaveId',
-              );
-              if (savedStatus != null) {
-                final Map<String, dynamic> mutableItem = Map.from(item);
-                mutableItem['status'] = savedStatus;
-                mappedList.add(mutableItem);
-                continue;
-              }
-            }
-            mappedList.add(item);
-          }
-          return mappedList;
-        }
         return data is List ? data : [];
       } else {
         throw Exception('Failed to fetch leave history');
       }
     } catch (e) {
       _logger.e('❌ [API ERROR] getLeaveHistory: $e');
-      return [];
+      throw Exception('Failed to fetch leave history: $e');
     }
   }
 
@@ -693,14 +459,6 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         return _extractData(responseData) as Map<String, dynamic>;
-      } else if (response.statusCode == 403) {
-        _logger.w('🔒 403 Forbidden in updateLeaveStatus - Simulating locally');
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_mock_leave_status_$leaveId', status);
-        _showBypassSnackBar(
-          'Admin bypass: Simulated status update to $status!',
-        );
-        return {'id': leaveId, 'status': status};
       } else {
         // Try PUT if PATCH fails
         _logger.w('PATCH failed, attempting PUT...');
@@ -709,33 +467,11 @@ class ApiService {
         if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
           final responseData = jsonDecode(putResponse.body);
           return _extractData(responseData) as Map<String, dynamic>;
-        } else if (putResponse.statusCode == 403) {
-          _logger.w(
-            '🔒 403 Forbidden in PUT updateLeaveStatus - Simulating locally',
-          );
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('local_mock_leave_status_$leaveId', status);
-          _showBypassSnackBar(
-            'Admin bypass: Simulated status update to $status!',
-          );
-          return {'id': leaveId, 'status': status};
         } else {
           throw Exception('Failed to update leave: ${putResponse.body}');
         }
       }
     } catch (e) {
-      if (e.toString().contains('403') ||
-          e.toString().toLowerCase().contains('forbidden')) {
-        _logger.w(
-          '🔒 Forbidden caught in updateLeaveStatus catch block - Simulating locally',
-        );
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_mock_leave_status_$leaveId', status);
-        _showBypassSnackBar(
-          'Admin bypass: Simulated status update to $status!',
-        );
-        return {'id': leaveId, 'status': status};
-      }
       _logger.e('❌ [API ERROR] updateLeaveStatus: $e');
       throw Exception('Update leave error: $e');
     }
@@ -779,70 +515,10 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         return _extractData(responseData) as Map<String, dynamic>;
-      } else if (response.statusCode == 403) {
-        _logger.w('🔒 403 Forbidden in createTask - Simulating locally');
-        final prefs = await SharedPreferences.getInstance();
-        final mockTask = {
-          'id': 'mock-task-${DateTime.now().millisecondsSinceEpoch}',
-          '_id': 'mock-task-${DateTime.now().millisecondsSinceEpoch}',
-          'title': title,
-          'description': description,
-          'companyId': companyId,
-          'status': status ?? 'pending',
-          'priority': priority ?? 'medium',
-          'dueDate':
-              dueDate ??
-              DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-          'projectId': projectId,
-          'assigneeId': assigneeId,
-          'completed': (status == 'completed'),
-          'createdAt': DateTime.now().toIso8601String(),
-        };
-        final savedTaskListStr = prefs.getString('local_mock_tasks') ?? '[]';
-        final List<dynamic> savedTaskList = jsonDecode(savedTaskListStr);
-        savedTaskList.add(mockTask);
-        await prefs.setString('local_mock_tasks', jsonEncode(savedTaskList));
-
-        _showBypassSnackBar(
-          'Admin bypass: Simulated creating task "$title" locally!',
-        );
-        return mockTask;
       } else {
         throw Exception('Failed to create task: ${response.body}');
       }
     } catch (e) {
-      if (e.toString().contains('403') ||
-          e.toString().toLowerCase().contains('forbidden')) {
-        _logger.w(
-          '🔒 Forbidden caught in createTask catch block - Simulating locally',
-        );
-        final prefs = await SharedPreferences.getInstance();
-        final mockTask = {
-          'id': 'mock-task-${DateTime.now().millisecondsSinceEpoch}',
-          '_id': 'mock-task-${DateTime.now().millisecondsSinceEpoch}',
-          'title': title,
-          'description': description,
-          'companyId': companyId,
-          'status': status ?? 'pending',
-          'priority': priority ?? 'medium',
-          'dueDate':
-              dueDate ??
-              DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-          'projectId': projectId,
-          'assigneeId': assigneeId,
-          'completed': (status == 'completed'),
-          'createdAt': DateTime.now().toIso8601String(),
-        };
-        final savedTaskListStr = prefs.getString('local_mock_tasks') ?? '[]';
-        final List<dynamic> savedTaskList = jsonDecode(savedTaskListStr);
-        savedTaskList.add(mockTask);
-        await prefs.setString('local_mock_tasks', jsonEncode(savedTaskList));
-
-        _showBypassSnackBar(
-          'Admin bypass: Simulated creating task "$title" locally!',
-        );
-        return mockTask;
-      }
       _logger.e('❌ [API ERROR] createTask: $e');
       throw Exception('Create task error: $e');
     }
@@ -861,54 +537,16 @@ class ApiService {
       _logResponse('GET', url, response);
       await _handleUnauthorized(response);
 
-      List<dynamic> tasksList = [];
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData);
-        tasksList = data is List ? data : [];
+        return data is List ? data : [];
       } else {
-        _logger.w(
-          'Failed to fetch tasks by company from server, continuing with local tasks',
-        );
+        throw Exception('Failed to fetch tasks by company: ${response.statusCode}');
       }
-
-      final prefs = await SharedPreferences.getInstance();
-
-      final savedTaskListStr = prefs.getString('local_mock_tasks') ?? '[]';
-      final List<dynamic> savedTaskList = jsonDecode(savedTaskListStr);
-      final companyMockTasks = savedTaskList
-          .where((t) => t['companyId'] == companyId)
-          .toList();
-
-      final List<dynamic> mergedList = [];
-      for (var item in tasksList) {
-        if (item is Map<String, dynamic>) {
-          final taskId = item['_id'] ?? item['id']?.toString() ?? '';
-          final savedStatus = prefs.getString('local_mock_task_status_$taskId');
-          final savedPriority = prefs.getString(
-            'local_mock_task_priority_$taskId',
-          );
-          if (savedStatus != null || savedPriority != null) {
-            final Map<String, dynamic> mutableItem = Map.from(item);
-            if (savedStatus != null) {
-              mutableItem['status'] = savedStatus;
-              mutableItem['completed'] = (savedStatus == 'completed');
-            }
-            if (savedPriority != null) {
-              mutableItem['priority'] = savedPriority;
-            }
-            mergedList.add(mutableItem);
-            continue;
-          }
-        }
-        mergedList.add(item);
-      }
-
-      mergedList.addAll(companyMockTasks);
-      return mergedList;
     } catch (e) {
       _logger.e('❌ [API ERROR] fetchTasksByCompany: $e');
-      return [];
+      throw Exception('Fetch tasks error: $e');
     }
   }
 
@@ -923,54 +561,16 @@ class ApiService {
       _logResponse('GET', url, response);
       await _handleUnauthorized(response);
 
-      List<dynamic> tasksList = [];
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final data = _extractData(responseData);
-        tasksList = data is List ? data : [];
+        return data is List ? data : [];
       } else {
-        _logger.w(
-          'Failed to fetch tasks by project from server, continuing with local tasks',
-        );
+        throw Exception('Failed to fetch tasks by project: ${response.statusCode}');
       }
-
-      final prefs = await SharedPreferences.getInstance();
-
-      final savedTaskListStr = prefs.getString('local_mock_tasks') ?? '[]';
-      final List<dynamic> savedTaskList = jsonDecode(savedTaskListStr);
-      final projectMockTasks = savedTaskList
-          .where((t) => t['projectId'] == projectId)
-          .toList();
-
-      final List<dynamic> mergedList = [];
-      for (var item in tasksList) {
-        if (item is Map<String, dynamic>) {
-          final taskId = item['_id'] ?? item['id']?.toString() ?? '';
-          final savedStatus = prefs.getString('local_mock_task_status_$taskId');
-          final savedPriority = prefs.getString(
-            'local_mock_task_priority_$taskId',
-          );
-          if (savedStatus != null || savedPriority != null) {
-            final Map<String, dynamic> mutableItem = Map.from(item);
-            if (savedStatus != null) {
-              mutableItem['status'] = savedStatus;
-              mutableItem['completed'] = (savedStatus == 'completed');
-            }
-            if (savedPriority != null) {
-              mutableItem['priority'] = savedPriority;
-            }
-            mergedList.add(mutableItem);
-            continue;
-          }
-        }
-        mergedList.add(item);
-      }
-
-      mergedList.addAll(projectMockTasks);
-      return mergedList;
     } catch (e) {
       _logger.e('❌ [API ERROR] fetchTasksByProject: $e');
-      return [];
+      throw Exception('Fetch tasks error: $e');
     }
   }
 
@@ -999,47 +599,11 @@ class ApiService {
         final responseData = jsonDecode(response.body);
         return _extractData(responseData) as Map<String, dynamic>;
       } else {
-        _logger.w('⚠️ Server error ${response.statusCode} in updateTask - Simulating locally');
-        final prefs = await SharedPreferences.getInstance();
-        if (status != null) {
-          await prefs.setString('local_mock_task_status_$taskId', status);
-        }
-        if (priority != null) {
-          await prefs.setString('local_mock_task_priority_$taskId', priority);
-        }
-
-        _showBypassSnackBar(
-          'Simulated task update: status set to $status!',
-        );
-
-        final Map<String, dynamic> res = {'id': taskId};
-        if (status != null) res['status'] = status;
-        if (priority != null) res['priority'] = priority;
-        return res;
+        throw Exception('Failed to update task: ${response.statusCode}');
       }
     } catch (e) {
-      _logger.w('⚠️ Exception in updateTask - Simulating locally: $e');
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        if (status != null) {
-          await prefs.setString('local_mock_task_status_$taskId', status);
-        }
-        if (priority != null) {
-          await prefs.setString('local_mock_task_priority_$taskId', priority);
-        }
-
-        _showBypassSnackBar(
-          'Offline Simulation: Simulated task update to $status!',
-        );
-
-        final Map<String, dynamic> res = {'id': taskId};
-        if (status != null) res['status'] = status;
-        if (priority != null) res['priority'] = priority;
-        return res;
-      } catch (fallbackError) {
-        _logger.e('❌ [API ERROR] updateTask fallback failed: $fallbackError');
-        throw Exception('Update task error: $e');
-      }
+      _logger.e('❌ [API ERROR] updateTask: $e');
+      throw Exception('Update task error: $e');
     }
   }
 
@@ -1077,64 +641,146 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         return _extractData(responseData) as Map<String, dynamic>;
-      } else if (response.statusCode == 403) {
-        _logger.w('🔒 403 Forbidden in createEmployee - Simulating locally');
-        final prefs = await SharedPreferences.getInstance();
-        final mockEmp = {
-          'id': 'mock-emp-${DateTime.now().millisecondsSinceEpoch}',
-          '_id': 'mock-emp-${DateTime.now().millisecondsSinceEpoch}',
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'designation': designation,
-          'department': department,
-          'phone': phone,
-          'status': 'active',
-          'createdAt': DateTime.now().toIso8601String(),
-        };
-        final savedEmpListStr = prefs.getString('local_mock_employees') ?? '[]';
-        final List<dynamic> savedEmpList = jsonDecode(savedEmpListStr);
-        savedEmpList.add(mockEmp);
-        await prefs.setString('local_mock_employees', jsonEncode(savedEmpList));
-
-        _showBypassSnackBar(
-          'Admin bypass: Simulated adding $firstName $lastName locally!',
-        );
-        return mockEmp;
       } else {
         throw Exception('Failed to create employee: ${response.body}');
       }
     } catch (e) {
-      _logger.w(
-        '⚠️ Network error or Forbidden in createEmployee - Simulating locally: $e',
-      );
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final mockEmp = {
-          'id': 'mock-emp-${DateTime.now().millisecondsSinceEpoch}',
-          '_id': 'mock-emp-${DateTime.now().millisecondsSinceEpoch}',
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'designation': designation,
-          'department': department,
-          'phone': phone,
-          'status': 'active',
-          'createdAt': DateTime.now().toIso8601String(),
-        };
-        final savedEmpListStr = prefs.getString('local_mock_employees') ?? '[]';
-        final List<dynamic> savedEmpList = jsonDecode(savedEmpListStr);
-        savedEmpList.add(mockEmp);
-        await prefs.setString('local_mock_employees', jsonEncode(savedEmpList));
+      _logger.e('❌ [API ERROR] createEmployee: $e');
+      throw Exception('Create employee error: $e');
+    }
+  }
 
-        _showBypassSnackBar(
-          'Offline Bypass: Simulated adding $firstName $lastName locally!',
-        );
-        return mockEmp;
-      } catch (fallbackError) {
-        _logger.e('❌ Fallback failed: $fallbackError');
-        throw Exception('Create employee error: $e');
+  // --- Work From Home (WFH) APIs ---
+
+  static Future<List<dynamic>> getWfhRequests() async {
+    final url = Uri.parse('$baseUrl/wfh-requests');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to fetch WFH requests: ${response.statusCode}');
       }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getWfhRequests: $e');
+      throw Exception('Failed to fetch WFH requests: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getWfhRequestById(String wfhRequestId) async {
+    final url = Uri.parse('$baseUrl/wfh-requests/$wfhRequestId');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        return _extractData(responseData) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to fetch WFH request details: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getWfhRequestById: $e');
+      throw Exception('Failed to fetch WFH request details: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createWfhRequest({
+    required String employeeId,
+    required String startDate,
+    required String endDate,
+    required String reason,
+  }) async {
+    final url = Uri.parse('$baseUrl/wfh-requests');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'employeeId': employeeId,
+      'startDate': startDate,
+      'endDate': endDate,
+      'reason': reason,
+    });
+
+    _logRequest('POST', url, headers: headers, body: body);
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        return _extractData(responseData) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to create WFH request: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] createWfhRequest: $e');
+      throw Exception('Create WFH request error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateWfhRequestStatus({
+    required String wfhRequestId,
+    required String status,
+    String? adminComment,
+  }) async {
+    final url = Uri.parse('$baseUrl/wfh-requests/$wfhRequestId/status');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'status': status,
+      if (adminComment != null) 'adminComment': adminComment,
+    });
+
+    _logRequest('PATCH', url, headers: headers, body: body);
+
+    try {
+      final response = await http.patch(url, headers: headers, body: body);
+      _logResponse('PATCH', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        return _extractData(responseData) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update WFH request status: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] updateWfhRequestStatus: $e');
+      throw Exception('Update WFH request status error: $e');
+    }
+  }
+
+  static Future<void> deleteWfhRequest({required String wfhRequestId}) async {
+    final url = Uri.parse('$baseUrl/wfh-requests/$wfhRequestId');
+    final headers = await _getHeaders();
+
+    _logRequest('DELETE', url, headers: headers);
+
+    try {
+      final response = await http.delete(url, headers: headers);
+      _logResponse('DELETE', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete WFH request: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] deleteWfhRequest: $e');
+      throw Exception('Delete WFH request error: $e');
     }
   }
 }

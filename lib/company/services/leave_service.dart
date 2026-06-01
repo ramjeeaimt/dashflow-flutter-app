@@ -5,12 +5,7 @@ import 'dart:async';
 /// Leave Service
 class LeaveService {
   final ApiService apiService;
-  static const String _endpoint = '/api/leaves';
-
-  // Fake data storage
-  static final List<Leave> _fakeLeaves = _generateFakeLeaves();
-  static final Map<String, Map<String, int>> _leaveBalance =
-      _generateLeaveBalance();
+  static const String _endpoint = '/leaves';
 
   LeaveService({required this.apiService});
 
@@ -23,44 +18,53 @@ class LeaveService {
     DateTime? fromDate,
     DateTime? toDate,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-
     try {
-      List<Leave> filtered = _fakeLeaves;
-
-      // Filter by employeeId
+      final Map<String, String> queryParams = {};
       if (employeeId != null && employeeId.isNotEmpty) {
-        filtered = filtered.where((l) => l.employeeId == employeeId).toList();
+        queryParams['employeeId'] = employeeId;
       }
-
-      // Filter by status
       if (status != null && status.isNotEmpty) {
-        filtered = filtered.where((l) => l.status == status).toList();
+        queryParams['status'] = status;
+      }
+      queryParams['page'] = page.toString();
+      queryParams['limit'] = pageSize.toString();
+
+      final queryString = Uri(queryParameters: queryParams).query;
+      final path = queryString.isNotEmpty ? '$_endpoint?$queryString' : _endpoint;
+
+      final response = await apiService.get(path);
+      List<dynamic> listData = [];
+      int total = 0;
+      if (response is List) {
+        listData = response;
+        total = response.length;
+      } else if (response is Map<String, dynamic>) {
+        final data = response['data'] ?? response['leaves'] ?? response['items'];
+        if (data is List) {
+          listData = data;
+        }
+        total = response['total'] ?? response['totalCount'] ?? listData.length;
       }
 
-      // Filter by date range
+      final items = listData.map((json) => Leave.fromJson(json)).toList();
+      
+      // Local client-side filter for dates if they were provided (fallback/reinforcement)
+      var filteredItems = items;
       if (fromDate != null) {
-        filtered = filtered.where((l) => l.fromDate.isAfter(fromDate)).toList();
+        filteredItems = filteredItems.where((l) => l.fromDate.isAfter(fromDate)).toList();
       }
       if (toDate != null) {
-        filtered = filtered.where((l) => l.toDate.isBefore(toDate)).toList();
+        filteredItems = filteredItems.where((l) => l.toDate.isBefore(toDate)).toList();
       }
 
-      // Pagination
-      final startIndex = (page - 1) * pageSize;
-      final endIndex = (startIndex + pageSize).clamp(0, filtered.length);
-      final paginatedList = filtered.sublist(
-        startIndex,
-        endIndex.clamp(0, filtered.length),
-      );
-
       return ListResponse(
-        items: paginatedList,
-        totalCount: filtered.length,
+        items: filteredItems,
+        totalCount: total,
         page: page,
         pageSize: pageSize,
       );
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to fetch leaves: $e',
         errorCode: 'FETCH_ERROR',
@@ -74,32 +78,11 @@ class LeaveService {
     int page = 1,
     int pageSize = 10,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    try {
-      final filtered = _fakeLeaves
-          .where((l) => l.employeeId == employeeId)
-          .toList();
-
-      final startIndex = (page - 1) * pageSize;
-      final endIndex = (startIndex + pageSize).clamp(0, filtered.length);
-      final paginatedList = filtered.sublist(
-        startIndex,
-        endIndex.clamp(0, filtered.length),
-      );
-
-      return ListResponse(
-        items: paginatedList,
-        totalCount: filtered.length,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Failed to fetch employee leaves: $e',
-        errorCode: 'FETCH_ERROR',
-      );
-    }
+    return getAllLeaves(
+      employeeId: employeeId,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   /// Apply for leave
@@ -112,35 +95,19 @@ class LeaveService {
     required int noOfDays,
     required String reason,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-
     try {
-      // Check leave balance
-      final balance = _leaveBalance[employeeId] ?? {};
-      final available = balance[leaveType] ?? 0;
+      final body = {
+        'employeeId': employeeId,
+        'startDate': fromDate.toIso8601String().substring(0, 10),
+        'endDate': toDate.toIso8601String().substring(0, 10),
+        'type': leaveType,
+        'reason': reason,
+      };
 
-      if (available < noOfDays) {
-        throw ApiException(
-          message: 'Insufficient leave balance',
-          errorCode: 'INSUFFICIENT_BALANCE',
-        );
-      }
-
-      final leave = Leave(
-        id: 'LEAVE${DateTime.now().millisecondsSinceEpoch}',
-        employeeId: employeeId,
-        employeeName: employeeName,
-        fromDate: fromDate,
-        toDate: toDate,
-        leaveType: leaveType,
-        noOfDays: noOfDays,
-        status: 'pending',
-        reason: reason,
-      );
-
-      _fakeLeaves.add(leave);
-      return leave;
+      final response = await apiService.post(_endpoint, body);
+      return Leave.fromJson(response);
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to apply leave: $e',
         errorCode: 'APPLY_ERROR',
@@ -153,43 +120,15 @@ class LeaveService {
     required String leaveId,
     required String approverName,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-
     try {
-      final index = _fakeLeaves.indexWhere((l) => l.id == leaveId);
-
-      if (index == -1) {
-        throw ApiException(
-          message: 'Leave request not found',
-          errorCode: 'NOT_FOUND',
-        );
-      }
-
-      final leave = _fakeLeaves[index];
-      final approvedLeave = Leave(
-        id: leave.id,
-        employeeId: leave.employeeId,
-        employeeName: leave.employeeName,
-        fromDate: leave.fromDate,
-        toDate: leave.toDate,
-        leaveType: leave.leaveType,
-        noOfDays: leave.noOfDays,
-        status: 'approved',
-        reason: leave.reason,
-        approverName: approverName,
-        approvedDate: DateTime.now(),
-      );
-
-      _fakeLeaves[index] = approvedLeave;
-
-      // Update leave balance
-      _leaveBalance[leave.employeeId] ??= {};
-      _leaveBalance[leave.employeeId]![leave.leaveType] =
-          (_leaveBalance[leave.employeeId]![leave.leaveType] ?? 0) -
-          leave.noOfDays;
-
-      return approvedLeave;
+      final body = {
+        'status': 'APPROVED',
+        'adminComment': 'Approved by $approverName',
+      };
+      final response = await apiService.patch('$_endpoint/$leaveId/status', body);
+      return Leave.fromJson(response);
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to approve leave: $e',
         errorCode: 'APPROVE_ERROR',
@@ -202,36 +141,15 @@ class LeaveService {
     required String leaveId,
     required String approverName,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-
     try {
-      final index = _fakeLeaves.indexWhere((l) => l.id == leaveId);
-
-      if (index == -1) {
-        throw ApiException(
-          message: 'Leave request not found',
-          errorCode: 'NOT_FOUND',
-        );
-      }
-
-      final leave = _fakeLeaves[index];
-      final rejectedLeave = Leave(
-        id: leave.id,
-        employeeId: leave.employeeId,
-        employeeName: leave.employeeName,
-        fromDate: leave.fromDate,
-        toDate: leave.toDate,
-        leaveType: leave.leaveType,
-        noOfDays: leave.noOfDays,
-        status: 'rejected',
-        reason: leave.reason,
-        approverName: approverName,
-        approvedDate: DateTime.now(),
-      );
-
-      _fakeLeaves[index] = rejectedLeave;
-      return rejectedLeave;
+      final body = {
+        'status': 'REJECTED',
+        'adminComment': 'Rejected by $approverName',
+      };
+      final response = await apiService.patch('$_endpoint/$leaveId/status', body);
+      return Leave.fromJson(response);
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to reject leave: $e',
         errorCode: 'REJECT_ERROR',
@@ -241,59 +159,59 @@ class LeaveService {
 
   /// Get leave balance
   Future<Map<String, int>> getLeaveBalance(String employeeId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
     try {
-      return _leaveBalance[employeeId] ?? _getDefaultLeaveBalance();
-    } catch (e) {
-      throw ApiException(
-        message: 'Failed to fetch leave balance: $e',
-        errorCode: 'FETCH_ERROR',
+      final leavesResponse = await getEmployeeLeaves(
+        employeeId: employeeId,
+        pageSize: 100,
       );
+      final approvedLeaves = leavesResponse.items.where(
+        (l) => l.status.toUpperCase() == 'APPROVED',
+      );
+
+      final Map<String, int> balance = _getDefaultLeaveBalance();
+      for (final leave in approvedLeaves) {
+        final type = leave.leaveType.toLowerCase();
+        if (balance.containsKey(type)) {
+          balance[type] = (balance[type]! - leave.noOfDays).clamp(0, 100);
+        }
+      }
+      return balance;
+    } catch (e) {
+      return _getDefaultLeaveBalance();
     }
   }
 
   /// Get leave balance for all employees
   Future<Map<String, Map<String, int>>> getAllLeaveBalance() async {
-    await Future.delayed(const Duration(milliseconds: 700));
-
     try {
-      return _leaveBalance;
+      final leavesResponse = await getAllLeaves(pageSize: 1000);
+      final Map<String, Map<String, int>> balances = {};
+
+      for (final leave in leavesResponse.items) {
+        final empId = leave.employeeId;
+        balances.putIfAbsent(empId, () => _getDefaultLeaveBalance());
+
+        if (leave.status.toUpperCase() == 'APPROVED') {
+          final type = leave.leaveType.toLowerCase();
+          if (balances[empId]!.containsKey(type)) {
+            balances[empId]![type] =
+                (balances[empId]![type]! - leave.noOfDays).clamp(0, 100);
+          }
+        }
+      }
+      return balances;
     } catch (e) {
-      throw ApiException(
-        message: 'Failed to fetch leave balance: $e',
-        errorCode: 'FETCH_ERROR',
-      );
+      return {};
     }
   }
 
   /// Cancel leave application
   Future<bool> cancelLeave(String leaveId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
     try {
-      final index = _fakeLeaves.indexWhere((l) => l.id == leaveId);
-
-      if (index == -1) {
-        throw ApiException(
-          message: 'Leave request not found',
-          errorCode: 'NOT_FOUND',
-        );
-      }
-
-      final leave = _fakeLeaves[index];
-
-      if (leave.status == 'approved') {
-        // Refund leave balance
-        _leaveBalance[leave.employeeId] ??= {};
-        _leaveBalance[leave.employeeId]![leave.leaveType] =
-            (_leaveBalance[leave.employeeId]![leave.leaveType] ?? 0) +
-            leave.noOfDays;
-      }
-
-      _fakeLeaves.removeAt(index);
+      await apiService.delete('$_endpoint/$leaveId');
       return true;
     } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(
         message: 'Failed to cancel leave: $e',
         errorCode: 'CANCEL_ERROR',
@@ -306,34 +224,15 @@ class LeaveService {
     int page = 1,
     int pageSize = 10,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    try {
-      final filtered = _fakeLeaves.where((l) => l.status == 'pending').toList();
-
-      final startIndex = (page - 1) * pageSize;
-      final endIndex = (startIndex + pageSize).clamp(0, filtered.length);
-      final paginatedList = filtered.sublist(
-        startIndex,
-        endIndex.clamp(0, filtered.length),
-      );
-
-      return ListResponse(
-        items: paginatedList,
-        totalCount: filtered.length,
-        page: page,
-        pageSize: pageSize,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Failed to fetch pending leaves: $e',
-        errorCode: 'FETCH_ERROR',
-      );
-    }
+    return getAllLeaves(
+      status: 'PENDING',
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   /// Default leave balance
-  static Map<String, int> _getDefaultLeaveBalance() {
+  Map<String, int> _getDefaultLeaveBalance() {
     return {
       'casual': 12,
       'sick': 6,
@@ -341,71 +240,5 @@ class LeaveService {
       'personal': 3,
       'maternity': 0,
     };
-  }
-
-  /// Generate fake leave data
-  static List<Leave> _generateFakeLeaves() {
-    final List<Leave> leaves = [];
-    final employees = [
-      {'id': 'EMP001', 'name': 'John Doe'},
-      {'id': 'EMP002', 'name': 'Jane Smith'},
-      {'id': 'EMP003', 'name': 'Mike Johnson'},
-      {'id': 'EMP004', 'name': 'Sarah Williams'},
-    ];
-
-    final leaveTypes = ['casual', 'sick', 'earned', 'personal'];
-    final now = DateTime.now();
-
-    for (int i = 0; i < employees.length; i++) {
-      for (int j = 0; j < 3; j++) {
-        final fromDate = now.add(Duration(days: j * 30));
-        final toDate = fromDate.add(Duration(days: 3));
-
-        leaves.add(
-          Leave(
-            id: 'LEAVE${now.millisecondsSinceEpoch}$i$j',
-            employeeId: employees[i]['id']!,
-            employeeName: employees[i]['name']!,
-            fromDate: fromDate,
-            toDate: toDate,
-            leaveType: leaveTypes[j % leaveTypes.length],
-            noOfDays: 3,
-            status: ['pending', 'approved', 'rejected'][j % 3],
-            reason: 'Personal reasons',
-            approverName: j == 1 ? 'Manager' : null,
-            approvedDate: j == 1 ? DateTime.now() : null,
-          ),
-        );
-      }
-    }
-
-    return leaves;
-  }
-
-  /// Generate leave balance
-  static Map<String, Map<String, int>> _generateLeaveBalance() {
-    final Map<String, Map<String, int>> balance = {};
-    final employees = [
-      'EMP001',
-      'EMP002',
-      'EMP003',
-      'EMP004',
-      'EMP005',
-      'EMP006',
-      'EMP007',
-      'EMP008',
-    ];
-
-    for (var empId in employees) {
-      balance[empId] = {
-        'casual': 10,
-        'sick': 4,
-        'earned': 12,
-        'personal': 2,
-        'maternity': 0,
-      };
-    }
-
-    return balance;
   }
 }

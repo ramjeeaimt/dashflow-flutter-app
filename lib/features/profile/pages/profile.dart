@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashflow/features/auth/pages/login_screen.dart';
-import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
 import 'package:dashflow/core/archive/screens/archive_screen.dart';
 import 'dart:convert';
 
@@ -195,17 +194,18 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF8F9FB),
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
         title: const Text(
           'My Profile',
           style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+            color: Color(0xFF1E293B),
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            letterSpacing: -0.5,
           ),
         ),
       ),
@@ -215,15 +215,19 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             // Identity Hub
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF36617E), Color(0xFF1F3B4D)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
+                    color: const Color(0xFF36617E).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -232,47 +236,58 @@ class _ProfilePageState extends State<ProfilePage> {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      CircleAvatar(
-                        radius: 45,
-                        backgroundColor: const Color(0xFF36617E),
-                        child: Text(
-                          isLoading
-                              ? ''
-                              : userName
-                                    .split(' ')
-                                    .where((w) => w.isNotEmpty)
-                                    .take(2)
-                                    .map((w) => w[0].toUpperCase())
-                                    .join(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 4),
+                        ),
+                        child: CircleAvatar(
+                          radius: 45,
+                          backgroundColor: Colors.white,
+                          child: Text(
+                            isLoading
+                                ? ''
+                                : userName
+                                      .split(' ')
+                                      .where((w) => w.isNotEmpty)
+                                      .take(2)
+                                      .map((w) => w[0].toUpperCase())
+                                      .join(),
+                            style: const TextStyle(
+                              color: Color(0xFF36617E),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 28,
+                            ),
                           ),
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF36617E),
+                          color: Colors.white,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Iconsax.camera,
-                          color: Colors.white,
+                          color: Color(0xFF36617E),
                           size: 16,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 16),
                   Text(
                     isLoading ? "Loading..." : userName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: Color(0xFF1F2937),
+                      fontSize: 24,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -280,23 +295,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     isLoading
                         ? "Fetching details..."
                         : '$userRole | $department',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF36617E).withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       isLoading ? "---" : 'EMP ID: $employeeId',
                       style: const TextStyle(
-                        color: Color(0xFF36617E),
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
                       ),
                     ),
                   ),
@@ -308,112 +324,109 @@ class _ProfilePageState extends State<ProfilePage> {
             // Quick Links Hub
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text(
-                "Quick Links",
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                  color: Color(0xFF1F2937),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: const Text(
+                  "QUICK LINKS",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 10),
 
-            _buildActionItem(
-              context,
-              icon: Iconsax.receipt_2,
-              title: "My Payslip",
-              subtitle: "View and download your salary slips",
-              iconColor: Colors.blue.shade600,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PayslipListScreen()),
-                );
-              },
-            ),
-            _buildActionItem(
-              context,
-              icon: Iconsax.archive,
-              title: "My Archives",
-              subtitle: "Past documents and records",
-              iconColor: Colors.purple.shade500,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ArchiveScreen()),
-                );
-              },
-            ),
+            _buildSectionCard([
+              _buildListItem(
+                context: context,
+                icon: Iconsax.archive,
+                title: "My Archives",
+                subtitle: "Past documents and records",
+                iconColor: Colors.purple.shade500,
+                showDivider: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ArchiveScreen()),
+                  );
+                },
+              ),
+            ]),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 28),
 
             // Security Hub
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text(
-                "Security Settings",
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                  color: Color(0xFF1F2937),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: const Text(
+                  "SECURITY SETTINGS",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 10),
 
-            _buildActionItem(
-              context,
-              icon: Iconsax.lock,
-              title: "Password Reset",
-              subtitle: "Change or update your password",
-              iconColor: Colors.orange.shade500,
-            ),
-            _buildActionItem(
-              context,
-              icon: Iconsax.finger_scan,
-              title: "Biometric Login",
-              subtitle: "Enable Face ID or Fingerprint",
-              iconColor: Colors.green.shade500,
-              trailing: Switch(
-                value: true,
-                onChanged: (val) {},
-                activeThumbColor: const Color(0xFF36617E),
+            _buildSectionCard([
+              _buildListItem(
+                context: context,
+                icon: Iconsax.lock,
+                title: "Password Reset",
+                subtitle: "Change or update your password",
+                iconColor: Colors.orange.shade500,
+                showDivider: true,
               ),
-            ),
+              _buildListItem(
+                context: context,
+                icon: Iconsax.finger_scan,
+                title: "Biometric Login",
+                subtitle: "Enable Face ID or Fingerprint",
+                iconColor: Colors.green.shade500,
+                trailing: Switch(
+                  value: true,
+                  onChanged: (val) {},
+                  activeColor: Colors.white,
+                  activeTrackColor: const Color(0xFF36617E),
+                ),
+                showDivider: false,
+              ),
+            ]),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 28),
 
             // Log Out
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: OutlinedButton(
-                onPressed: _logout,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+            _buildSectionCard([
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  backgroundColor: Colors.red.shade50,
-                  foregroundColor: Colors.red,
+                  child: Icon(Iconsax.logout, color: Colors.red.shade400, size: 20),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Iconsax.logout),
-                    SizedBox(width: 8),
-                    Text(
-                      'Log Out securely',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+                title: const Text(
+                  'Log Out',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
                 ),
+                onTap: _logout,
               ),
-            ),
+            ]),
+            
             const SizedBox(height: 40),
           ],
         ),
@@ -421,61 +434,75 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildActionItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color iconColor,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
+  Widget _buildSectionCard(List<Widget> children) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: iconColor, size: 24),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-        ),
-        trailing:
-            trailing ??
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        onTap: onTap ?? () {
-          if (trailing == null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Routing to $title...")));
-          }
-        },
+      child: Column(
+        children: children,
       ),
+    );
+  }
+
+  Widget _buildListItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Color iconColor,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool showDivider = true,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                )
+              : null,
+          trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+          onTap: onTap ??
+              () {
+                if (trailing == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Routing to $title...")));
+                }
+              },
+        ),
+        if (showDivider)
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16),
+            child: Divider(height: 1, color: Colors.grey.shade100),
+          ),
+      ],
     );
   }
 

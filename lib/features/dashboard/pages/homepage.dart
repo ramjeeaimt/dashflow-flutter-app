@@ -15,6 +15,7 @@ import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
 import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
 import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
 import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
+import 'package:dashflow/features/wfh/pages/wfh_screen.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
@@ -708,32 +709,19 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
 
-                const SizedBox(height: 25),
-
-                const SizedBox(height: 25),
+                const SizedBox(height: 0),
 
                 // Quick Actions
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: GridView.count(
-                    crossAxisCount:
-                        3, // Changed to 3 for better spacing with 6 options
+                    crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.1,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
                     children: [
-                      ActionIcon(
-                        icon: Iconsax.people,
-                        label: "Employees",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EmployeesListScreen(),
-                          ),
-                        ),
-                      ),
                       ActionIcon(
                         icon: Iconsax.calendar_edit,
                         label: "Leave",
@@ -744,16 +732,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                       ),
-                      ActionIcon(
-                        icon: Iconsax.document_text,
-                        label: "Payslip",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PayslipListScreen(),
-                          ),
-                        ),
-                      ),
+
                       ActionIcon(
                         icon: Iconsax.task_square,
                         label: "Tasks",
@@ -783,11 +762,21 @@ class _DashboardPageState extends State<DashboardPage> {
                           }
                         },
                       ),
+                      ActionIcon(
+                        icon: Icons.home_work_outlined,
+                        label: "WFH",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WfhScreen(),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: 25),
 
                 // Company Announcement Banner
                 Padding(
@@ -1311,26 +1300,42 @@ class ActionIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(
-                0xFF36617E,
-              ).withValues(alpha: 0.1), // Primary Light
-              borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(icon, color: const Color(0xFF36617E), size: 25),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Colors.black87),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF36617E).withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xFF36617E), size: 28),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

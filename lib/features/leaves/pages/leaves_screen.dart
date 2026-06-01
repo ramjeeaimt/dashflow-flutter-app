@@ -113,7 +113,7 @@ class _LeaveScreenState extends State<LeaveScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() => setState(() {}));
     _loadUserAndLeaves();
   }
@@ -171,12 +171,16 @@ class _LeaveScreenState extends State<LeaveScreen>
   }
 
   List<LeaveModel> _getFilteredLeaves(int tabIndex) {
-    if (tabIndex == 1) {
-      return _allLeaves.where((l) => l.leaveType == LeaveType.casual).toList();
-    } else if (tabIndex == 2) {
-      return _allLeaves.where((l) => l.leaveType == LeaveType.sick).toList();
+    switch (tabIndex) {
+      case 1:
+        return _allLeaves.where((l) => l.status == LeaveStatus.awaiting).toList();
+      case 2:
+        return _allLeaves.where((l) => l.status == LeaveStatus.approved).toList();
+      case 3:
+        return _allLeaves.where((l) => l.status == LeaveStatus.declined).toList();
+      default:
+        return _allLeaves;
     }
-    return _allLeaves;
   }
 
   Map<String, List<LeaveModel>> _groupByMonth(List<LeaveModel> leaves) {
@@ -231,7 +235,7 @@ class _LeaveScreenState extends State<LeaveScreen>
               child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF2C5282),
+                        color: Color(0xFF36617E),
                       ),
                     )
                   : filtered.isEmpty
@@ -281,35 +285,45 @@ class _LeaveScreenState extends State<LeaveScreen>
           ),
           Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(
-                      Icons.notifications_outlined,
-                      color: Color(0xFF64748B),
-                      size: 22,
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Notifications coming soon!'),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFC5221F),
-                          shape: BoxShape.circle,
+                  );
+                },
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(
+                        Icons.notifications_outlined,
+                        color: Color(0xFF64748B),
+                        size: 22,
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFC5221F),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -322,26 +336,21 @@ class _LeaveScreenState extends State<LeaveScreen>
                       builder: (context) => const NewLeaveScreen(),
                     ),
                   );
-                  if (result != null && result is LeaveModel) {
-                    setState(() {
-                      _allLeaves.insert(0, result);
-                    });
+                  // NewLeaveScreen returns true on successful submission
+                  if (result == true) {
+                    _fetchLeaves();
                   }
                 },
                 child: Container(
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFF36617E),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1,
-                    ),
                   ),
                   child: const Icon(
                     Icons.add,
-                    color: Color(0xFF1E293B),
+                    color: Colors.white,
                     size: 22,
                   ),
                 ),
@@ -449,9 +458,7 @@ class _LeaveScreenState extends State<LeaveScreen>
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: const Color(
-            0xFF2C5282,
-          ), // Custom Slate-Blue matching Calendar select style
+          color: const Color(0xFF36617E),
           borderRadius: BorderRadius.circular(10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -466,8 +473,9 @@ class _LeaveScreenState extends State<LeaveScreen>
         ),
         tabs: const [
           Tab(text: 'All'),
-          Tab(text: 'Casual'),
-          Tab(text: 'Sick'),
+          Tab(text: 'Pending'),
+          Tab(text: 'Approved'),
+          Tab(text: 'Declined'),
         ],
       ),
     );
