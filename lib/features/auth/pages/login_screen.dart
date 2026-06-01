@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:dashflow/features/auth/pages/account_activate_screen.dart';
 import 'package:dashflow/features/auth/pages/forgot_password_screen.dart';
 import 'package:dashflow/core/api/api_service.dart';
 import 'package:dashflow/shared/components/bottom_bar.dart';
-
+import 'package:dashflow/features/admin/shared/admin_bottom_bar.dart';
+import 'package:dashflow/features/admin/users/models/user_model.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -148,14 +150,28 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
 
                             try {
-                              await ApiService.login(email, password);
+                              final data = await ApiService.login(email, password);
                               if (context.mounted) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const BottomBarWidget(),
-                                  ),
-                                );
+                                String role = 'employee';
+                                if (data != null && data['user'] != null) {
+                                  role = UserModel.fromJson(data['user']).role.toLowerCase();
+                                }
+                                
+                                if (role == 'admin') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const AdminBottomBarWidget(),
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const BottomBarWidget(),
+                                    ),
+                                  );
+                                }
                               }
                             } catch (e) {
                               if (context.mounted) {

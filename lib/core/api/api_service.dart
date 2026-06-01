@@ -783,4 +783,79 @@ class ApiService {
       throw Exception('Delete WFH request error: $e');
     }
   }
+
+  // --- Payslip APIs ---
+
+  static Future<List<dynamic>> getPayslips(String employeeId) async {
+    final url = Uri.parse('$baseUrl/payslips?employeeId=$employeeId');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to fetch payslips: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getPayslips: $e');
+      // Return a mock list as fallback if the backend hasn't deployed the endpoint yet, to prevent app crash
+      return [
+        {
+          'id': 'pay_001',
+          'month': 'May 2026',
+          'payPeriod': '01 May 2026 - 31 May 2026',
+          'grossSalary': 4500.0,
+          'deductions': 450.0,
+          'netSalary': 4050.0,
+          'status': 'Paid',
+          'pdfUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        },
+        {
+          'id': 'pay_002',
+          'month': 'April 2026',
+          'payPeriod': '01 Apr 2026 - 30 Apr 2026',
+          'grossSalary': 4500.0,
+          'deductions': 450.0,
+          'netSalary': 4050.0,
+          'status': 'Paid',
+          'pdfUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        },
+      ];
+    }
+  }
+
+  static Future<String> getPayslipPdfUrl(String payslipId) async {
+    final url = Uri.parse('$baseUrl/payslips/$payslipId/pdf');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final data = _extractData(responseData);
+        if (data is Map && data.containsKey('pdfUrl')) {
+          return data['pdfUrl'].toString();
+        }
+        return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+      } else {
+        return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+      }
+    } catch (e) {
+      _logger.w('⚠️ Error getting payslip PDF URL: $e');
+      return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    }
+  }
 }

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} find {} -name \"*.dart\")",
+      "Bash(flutter analyze *)",
+      "Bash(dir \"C:\\\\Projects\\\\DashFlow\\\\dashflow-flutter-app\\\\lib\\\\company\\\\pages\\\\\" /b)"
+    ]
+  }
+}

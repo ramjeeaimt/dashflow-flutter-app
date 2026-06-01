@@ -1,320 +1,168 @@
+// CRM shared constants, colours, and reusable widgets for all CRM screens.
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+const kPrimary    = Color(0xFF36617E);
+const kPrimaryLight = Color(0xFFEBF2F7);
+const kBg         = Color(0xFFF5F7FA);
+const kCard       = Colors.white;
+const kText       = Color(0xFF1F2937);
+const kSubText    = Color(0xFF6B7280);
+const kBorder     = Color(0xFFE5E7EB);
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+// ── Stat card ────────────────────────────────────────────────────────────────
+class StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final String? subtitle;
+  const StatCard({super.key, required this.label, required this.value, required this.icon, required this.color, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const MyHomePage(title: 'Flutter App Example'),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kBorder),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500, letterSpacing: 0.3)),
+          const SizedBox(height: 2),
+          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kText)),
+          if (subtitle != null) ...[const SizedBox(height: 2), Text(subtitle!, style: const TextStyle(fontSize: 11, color: kSubText))],
+        ],
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
+// ── Section header ────────────────────────────────────────────────────────────
+class SectionHeader extends StatelessWidget {
   final String title;
+  final String? action;
+  final VoidCallback? onAction;
+  const SectionHeader({super.key, required this.title, this.action, this.onAction});
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  int _notificationCount = 5;
-  int _currentIndex = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-      _notificationCount++;
-    });
-  }
-
-  void _resetCounter() {
-    setState(() {
-      _counter = 0;
-      _notificationCount = 0;
-    });
-  }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title), elevation: 0),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Badge Widget',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                        
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Icon(Icons.shopping_cart, size: 40),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    _notificationCount.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          // Badge with Mail Icon
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Icon(Icons.mail, size: 40),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.orange,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    '3',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Icon(Icons.notifications, size: 40),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    '7',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kText)),
+        if (action != null)
+          GestureDetector(onTap: onAction, child: Text(action!, style: const TextStyle(fontSize: 13, color: kPrimary, fontWeight: FontWeight.w600))),
+      ],
+    );
+  }
+}
 
-            
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Counter Example',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'You have pushed the button this many times:',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '$_counter',
-                        style: Theme.of(context).textTheme.displayLarge,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Button Examples',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _incrementCounter,
-                          child: const Text('Increment Counter'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: _resetCounter,
-                          child: const Text('Reset Counter'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('This is a SnackBar!'),
-                              ),
-                            );
-                          },
-                          child: const Text('Show SnackBar'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Input Field Example',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Enter your name',
-                          hintText: 'Type here...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.person),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.lock),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+// ── Status badge ──────────────────────────────────────────────────────────────
+class StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const StatusBadge({super.key, required this.label, required this.color});
 
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'List Example',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 3,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            leading: CircleAvatar(child: Text('${index + 1}')),
-                            title: Text('Item ${index + 1}'),
-                            subtitle: Text('Subtitle for item ${index + 1}'),
-                            trailing: const Icon(Icons.arrow_forward),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+      child: Text(label.toUpperCase(), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+    );
+  }
+}
+
+// ── Avatar initials ───────────────────────────────────────────────────────────
+class AvatarInitials extends StatelessWidget {
+  final String name;
+  final double radius;
+  final Color? bg;
+  const AvatarInitials({super.key, required this.name, this.radius = 20, this.bg});
+
+  @override
+  Widget build(BuildContext context) {
+    final words = name.trim().split(' ').where((w) => w.isNotEmpty).toList();
+    final initials = words.take(2).map((w) => w[0].toUpperCase()).join();
+    final palette = [const Color(0xFF36617E), Colors.purple, Colors.teal, Colors.orange, Colors.green, Colors.red, Colors.indigo];
+    final c = name.isEmpty ? 0 : name.codeUnitAt(0) % palette.length;
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: bg ?? palette[c].withValues(alpha: 0.2),
+      child: Text(initials, style: TextStyle(color: bg != null ? Colors.white : palette[c], fontWeight: FontWeight.bold, fontSize: radius * 0.75)),
+    );
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+class CrmSearchBar extends StatelessWidget {
+  final String hint;
+  final ValueChanged<String>? onChanged;
+  const CrmSearchBar({super.key, required this.hint, this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: kBorder)),
+      child: TextField(
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: kSubText, fontSize: 14),
+          prefixIcon: const Icon(Icons.search, color: kSubText, size: 20),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 13),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+    );
+  }
+}
+
+// ── Tab button ────────────────────────────────────────────────────────────────
+class CrmTabButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const CrmTabButton({super.key, required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? kPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(label, style: TextStyle(color: selected ? Colors.white : kSubText, fontWeight: selected ? FontWeight.w600 : FontWeight.normal, fontSize: 13)),
       ),
     );
   }
+}
+
+// ── AppBar helper ─────────────────────────────────────────────────────────────
+PreferredSizeWidget crmAppBar(BuildContext context, String title, {List<Widget>? actions}) {
+  return AppBar(
+    backgroundColor: Colors.white,
+    elevation: 0,
+    surfaceTintColor: Colors.white,
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: kText),
+      onPressed: () => Navigator.maybePop(context),
+    ),
+    title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: kText)),
+    actions: actions,
+    bottom: PreferredSize(preferredSize: const Size.fromHeight(1), child: Container(height: 1, color: kBorder)),
+  );
 }

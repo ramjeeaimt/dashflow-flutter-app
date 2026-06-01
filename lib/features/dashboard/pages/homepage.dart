@@ -580,416 +580,421 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-
-                // Header Section
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF36617E),
-                        Color(0xFF5386A4),
-                      ], // Primary to Lighter variant
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Profile
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor: Colors.white.withValues(
-                              alpha: 0.25,
-                            ),
-                            child: Text(
-                              userName
-                                  .split(' ')
-                                  .where((w) => w.isNotEmpty)
-                                  .take(2)
-                                  .map((w) => w[0].toUpperCase())
-                                  .join(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                userName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                userRole,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(
-                              Iconsax.logout,
-                              color: Colors.white,
-                            ),
-                            onPressed: _logout,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 25),
-
-                      // Clock Section
-                      Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              currentTime,
-                              style: const TextStyle(
-                                fontSize: 38,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              currentDate,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildAttendanceButton(),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-
-                      // Time Info
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          TimeInfo(title: "Clock-In", time: clockInTime),
-                          TimeInfo(title: "Clock-Out", time: clockOutTime),
-                          TimeInfo(title: "Working Hrs", time: workingHours),
-                        ],
-                      ),
-
-                      if (checkInDateTime != null) ...[
-                        const SizedBox(height: 20),
-                        _buildProgressBar(),
-                      ],
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 0),
-
-                // Quick Actions
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    children: [
-                      ActionIcon(
-                        icon: Iconsax.calendar_edit,
-                        label: "Leave",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LeaveScreen(),
-                          ),
-                        ),
-                      ),
-
-                      ActionIcon(
-                        icon: Iconsax.task_square,
-                        label: "Tasks",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TaskPage(),
-                          ),
-                        ),
-                      ),
-                      ActionIcon(
-                        icon: Iconsax.calendar_tick,
-                        label: "Attendance",
-                        onTap: () {
-                          if (employeeId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AttendanceHistoryPage(
-                                  employeeId: employeeId!,
-                                  userName: userName,
-                                ),
-                              ),
-                            );
-                          } else {
-                            showSnack("Loading profile, please wait...");
-                          }
-                        },
-                      ),
-                      ActionIcon(
-                        icon: Icons.home_work_outlined,
-                        label: "WFH",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const WfhScreen(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Company Announcement Banner
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 410.0,
+                pinned: true,
+                backgroundColor: const Color(0xFF36617E),
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.orange.shade300,
-                          Colors.orange.shade600,
-                        ],
+                          Color(0xFF36617E),
+                          Color(0xFF5386A4),
+                        ], // Primary to Lighter variant
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orange.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
+                      ),
                     ),
-                    child: Row(
+                    padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Iconsax.notification_bing,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "Company Announcement",
-                                style: TextStyle(
+                        // Profile
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.25,
+                              ),
+                              child: Text(
+                                userName
+                                    .split(' ')
+                                    .where((w) => w.isNotEmpty)
+                                    .take(2)
+                                    .map((w) => w[0].toUpperCase())
+                                    .join(),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                 ),
                               ),
-                              SizedBox(height: 5),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  userName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  userRole,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(
+                                Iconsax.logout,
+                                color: Colors.white,
+                              ),
+                              onPressed: _logout,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Clock Section
+                        Center(
+                          child: Column(
+                            children: [
                               Text(
-                                "Townhall meeting tomorrow at 10 AM. Don't forget!",
-                                style: TextStyle(
+                                currentTime,
+                                style: const TextStyle(
+                                  fontSize: 38,
                                   color: Colors.white,
-                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                currentDate,
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                              const SizedBox(height: 15),
+                              _buildAttendanceButton(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Time Info
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            TimeInfo(title: "Clock-In", time: clockInTime),
+                            TimeInfo(title: "Clock-Out", time: clockOutTime),
+                            TimeInfo(title: "Working Hrs", time: workingHours),
+                          ],
+                        ),
+
+                        if (checkInDateTime != null) ...[
+                          const SizedBox(height: 15),
+                          _buildProgressBar(),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 20, bottom: 100),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Quick Actions
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        childAspectRatio: 1.25,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        children: [
+                          ActionIcon(
+                            icon: Iconsax.calendar_edit,
+                            label: "Leave",
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LeaveScreen(),
+                              ),
+                            ),
+                          ),
+                          ActionIcon(
+                            icon: Iconsax.task_square,
+                            label: "Tasks",
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TaskPage(),
+                              ),
+                            ),
+                          ),
+                          ActionIcon(
+                            icon: Iconsax.calendar_tick,
+                            label: "Attendance",
+                            onTap: () {
+                              if (employeeId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AttendanceHistoryPage(
+                                      employeeId: employeeId!,
+                                      userName: userName,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                showSnack("Loading profile, please wait...");
+                              }
+                            },
+                          ),
+                          ActionIcon(
+                            icon: Icons.home_work_outlined,
+                            label: "WFH",
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const WfhScreen(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // Company Announcement Banner
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.orange.shade300,
+                              Colors.orange.shade600,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Iconsax.notification_bing,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const [
+                                  Text(
+                                    "Company Announcement",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Townhall meeting tomorrow at 10 AM. Don't forget!",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Assigned Tasks Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Assigned Tasks",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF36617E),
+                                ),
+                              ),
+                              Text(
+                                "See All",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue.shade600,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 15),
+                          taskItem(
+                            "Update Client Presentation",
+                            "Today, 5:00 PM",
+                            "Pending",
+                          ),
+                          taskItem(
+                            "Review Monthly Reports",
+                            "Tomorrow, 12:00 PM",
+                            "Completed",
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 25),
+                    const SizedBox(height: 25),
 
-                // Assigned Tasks Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Attendance History Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Assigned Tasks",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF36617E),
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Attendance History",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF36617E),
+                                ),
+                              ),
+                              Text(
+                                "See All",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue.shade600,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            "See All",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue.shade600,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const SizedBox(height: 15),
+                          if (activityHistory.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: const Text(
+                                "No attendance history found",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          else
+                            ...activityHistory.take(5).map((history) {
+                              final dateStr = history['date'] ?? '';
+                              String formattedDate = dateStr;
+                              try {
+                                final rawDate = dateStr.contains('T')
+                                    ? dateStr.split('T')[0]
+                                    : dateStr;
+                                formattedDate = DateFormat(
+                                  'dd MMM yyyy',
+                                ).format(DateTime.parse(rawDate));
+                              } catch (_) {}
+
+                              // Helper: parse time from date + time strings
+                              DateTime? parseTime(String? tStr) {
+                                if (tStr == null || tStr.isEmpty) return null;
+                                try {
+                                  final d = dateStr.contains('T')
+                                      ? dateStr.split('T')[0]
+                                      : dateStr;
+                                  return DateTime.parse('${d}T$tStr');
+                                } catch (_) {
+                                  return null;
+                                }
+                              }
+
+                              final checkIn = parseTime(history['checkInTime']);
+                              final checkOut = parseTime(history['checkOutTime']);
+
+                              final checkInFmt = checkIn != null
+                                  ? DateFormat('hh:mm a').format(checkIn)
+                                  : '--:--';
+                              final checkOutFmt = checkOut != null
+                                  ? DateFormat('hh:mm a').format(checkOut)
+                                  : '--:--';
+
+                              String workHrs = '--';
+                              if (checkIn != null && checkOut != null) {
+                                final dur = checkOut.difference(checkIn);
+                                workHrs =
+                                    '${dur.inHours}h ${dur.inMinutes.remainder(60)}m';
+                              }
+
+                              final status = (history['status'] ?? 'present')
+                                  .toString();
+
+                              return _buildHistoryCard(
+                                formattedDate,
+                                checkInFmt,
+                                checkOutFmt,
+                                workHrs,
+                                status,
+                              );
+                            }),
                         ],
                       ),
-                      const SizedBox(height: 15),
-                      taskItem(
-                        "Update Client Presentation",
-                        "Today, 5:00 PM",
-                        "Pending",
-                      ),
-                      taskItem(
-                        "Review Monthly Reports",
-                        "Tomorrow, 12:00 PM",
-                        "Completed",
-                      ),
-                    ],
-                  ),
+                    ),
+                  ]),
                 ),
-                const SizedBox(height: 25),
-
-                // Attendance History Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Attendance History",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF36617E),
-                            ),
-                          ),
-                          Text(
-                            "See All",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue.shade600,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      if (activityHistory.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: const Text(
-                            "No attendance history found",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        )
-                      else
-                        ...activityHistory.take(5).map((history) {
-                          final dateStr = history['date'] ?? '';
-                          String formattedDate = dateStr;
-                          try {
-                            final rawDate = dateStr.contains('T')
-                                ? dateStr.split('T')[0]
-                                : dateStr;
-                            formattedDate = DateFormat(
-                              'dd MMM yyyy',
-                            ).format(DateTime.parse(rawDate));
-                          } catch (_) {}
-
-                          // Helper: parse time from date + time strings
-                          DateTime? parseTime(String? tStr) {
-                            if (tStr == null || tStr.isEmpty) return null;
-                            try {
-                              final d = dateStr.contains('T')
-                                  ? dateStr.split('T')[0]
-                                  : dateStr;
-                              return DateTime.parse('${d}T$tStr');
-                            } catch (_) {
-                              return null;
-                            }
-                          }
-
-                          final checkIn = parseTime(history['checkInTime']);
-                          final checkOut = parseTime(history['checkOutTime']);
-
-                          final checkInFmt = checkIn != null
-                              ? DateFormat('hh:mm a').format(checkIn)
-                              : '--:--';
-                          final checkOutFmt = checkOut != null
-                              ? DateFormat('hh:mm a').format(checkOut)
-                              : '--:--';
-
-                          String workHrs = '--';
-                          if (checkIn != null && checkOut != null) {
-                            final dur = checkOut.difference(checkIn);
-                            workHrs =
-                                '${dur.inHours}h ${dur.inMinutes.remainder(60)}m';
-                          }
-
-                          final status = (history['status'] ?? 'present')
-                              .toString();
-
-                          return _buildHistoryCard(
-                            formattedDate,
-                            checkInFmt,
-                            checkOutFmt,
-                            workHrs,
-                            status,
-                          );
-                        }),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
+              ),
+            ],
           ),
 
           if (isPopUpVisible)
@@ -1298,43 +1303,48 @@ class ActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF36617E).withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: const Color(0xFF36617E), size: 28),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF36617E).withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: const Color(0xFF36617E), size: 28),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
