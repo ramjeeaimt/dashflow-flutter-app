@@ -76,8 +76,11 @@ class _TaskPageState extends State<TaskPage> {
       String userRole = "Employee";
       if (user['roles'] != null && user['roles'] is List && user['roles'].isNotEmpty) {
         final firstRole = user['roles'][0];
-        if (firstRole is Map) userRole = firstRole['name'] ?? "Employee";
-        else userRole = firstRole.toString();
+        if (firstRole is Map) {
+          userRole = firstRole['name'] ?? "Employee";
+        } else {
+          userRole = firstRole.toString();
+        }
       } else if (user['roles'] is String) {
         userRole = user['roles'];
       }
@@ -546,7 +549,7 @@ class _TaskPageState extends State<TaskPage> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: selectedProjectId,
+                      initialValue: selectedProjectId,
                       hint: const Text("Select Project", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.folder_open_rounded, color: Color(0xFF64748B)),
@@ -579,7 +582,7 @@ class _TaskPageState extends State<TaskPage> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: selectedAssigneeId,
+                      initialValue: selectedAssigneeId,
                       hint: _isLoadingEmployees 
                           ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text("Select Assignee", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),

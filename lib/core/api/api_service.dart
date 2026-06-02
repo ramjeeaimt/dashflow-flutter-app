@@ -311,12 +311,21 @@ class ApiService {
 
 
 
-  static Future<List<dynamic>> getEmployees({String? userId}) async {
-    String queryString = '';
-    if (userId != null) {
-      queryString = '?userId=$userId';
-    }
-    final url = Uri.parse('$baseUrl/employees$queryString');
+  static Future<List<dynamic>> getEmployees({
+    String? userId,
+    String? companyId,
+    String? departmentId,
+    String? designationId,
+    String? search,
+  }) async {
+    final Map<String, String> queryParams = {};
+    if (userId != null) queryParams['userId'] = userId;
+    if (companyId != null) queryParams['companyId'] = companyId;
+    if (departmentId != null) queryParams['departmentId'] = departmentId;
+    if (designationId != null) queryParams['designationId'] = designationId;
+    if (search != null) queryParams['search'] = search;
+
+    final url = Uri.parse('$baseUrl/employees').replace(queryParameters: queryParams);
     final headers = await _getHeaders();
 
     _logRequest('GET', url, headers: headers);
@@ -611,10 +620,14 @@ class ApiService {
     required String firstName,
     required String lastName,
     required String email,
-    required String designation,
-    required String department,
     required String phone,
+    required String role,
+    required String hireDate,
     String? password,
+    String? companyId,
+    String? departmentId,
+    String? designationId,
+    String? salary,
   }) async {
     final url = Uri.parse('$baseUrl/employees');
     final headers = await _getHeaders();
@@ -623,11 +636,15 @@ class ApiService {
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
-      'designation': designation,
-      'department': department,
       'phone': phone,
+      'role': role,
+      'hireDate': hireDate,
+      if (password != null) 'password': password,
+      if (companyId != null) 'companyId': companyId,
+      if (departmentId != null) 'departmentId': departmentId,
+      if (designationId != null) 'designationId': designationId,
+      if (salary != null) 'salary': salary,
     };
-    if (password != null) bodyMap['password'] = password;
 
     final body = jsonEncode(bodyMap);
 
@@ -742,7 +759,7 @@ class ApiService {
     final headers = await _getHeaders();
     final body = jsonEncode({
       'status': status,
-      if (adminComment != null) 'adminComment': adminComment,
+      'adminComment': adminComment,
     });
 
     _logRequest('PATCH', url, headers: headers, body: body);
@@ -856,6 +873,496 @@ class ApiService {
     } catch (e) {
       _logger.w('⚠️ Error getting payslip PDF URL: $e');
       return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    }
+  }
+
+  // --- Dashboard Metrics & Feed ---
+
+  static Future<Map<String, dynamic>> getDashboardMetrics(String companyId) async {
+    final url = Uri.parse('$baseUrl/dashboard/metrics?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get dashboard metrics: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getDashboardMetrics: $e');
+      throw Exception('Dashboard metrics error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getDashboardCharts(String companyId) async {
+    final url = Uri.parse('$baseUrl/dashboard/charts?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get dashboard charts: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getDashboardCharts: $e');
+      throw Exception('Dashboard charts error: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getDashboardFeed(String companyId) async {
+    final url = Uri.parse('$baseUrl/dashboard/feed?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get dashboard feed: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getDashboardFeed: $e');
+      throw Exception('Dashboard feed error: $e');
+    }
+  }
+
+  // --- Notifications APIs ---
+
+  static Future<List<dynamic>> getNotifications() async {
+    final url = Uri.parse('$baseUrl/notifications/mine');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getNotifications: $e');
+      throw Exception('Notifications error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> markAllNotificationsRead() async {
+    final url = Uri.parse('$baseUrl/notifications/mark-read');
+    final headers = await _getHeaders();
+    _logRequest('POST', url, headers: headers);
+    try {
+      final response = await http.post(url, headers: headers);
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to mark notifications read: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] markAllNotificationsRead: $e');
+      throw Exception('Mark read error: $e');
+    }
+  }
+
+  static Future<void> clearNotifications() async {
+    final url = Uri.parse('$baseUrl/notifications/clear');
+    final headers = await _getHeaders();
+    _logRequest('DELETE', url, headers: headers);
+    try {
+      final response = await http.delete(url, headers: headers);
+      _logResponse('DELETE', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to clear notifications: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] clearNotifications: $e');
+      throw Exception('Clear notifications error: $e');
+    }
+  }
+
+  // --- Finance & Payroll APIs ---
+
+  static Future<List<dynamic>> getPayroll({
+    String? employeeId,
+    String? companyId,
+    int? month,
+    int? year,
+  }) async {
+    final Map<String, String> queryParams = {};
+    if (employeeId != null) queryParams['employeeId'] = employeeId;
+    if (companyId != null) queryParams['companyId'] = companyId;
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
+
+    final uri = Uri.parse('$baseUrl/finance/payroll').replace(queryParameters: queryParams);
+    final headers = await _getHeaders();
+    _logRequest('GET', uri, headers: headers);
+    try {
+      final response = await http.get(uri, headers: headers);
+      _logResponse('GET', uri, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get payroll: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getPayroll: $e');
+      throw Exception('Payroll error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getFinanceSummary(
+    String companyId, {
+    int? month,
+    int? year,
+  }) async {
+    final Map<String, String> queryParams = {'companyId': companyId};
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
+
+    final uri = Uri.parse('$baseUrl/finance/summary').replace(queryParameters: queryParams);
+    final headers = await _getHeaders();
+    _logRequest('GET', uri, headers: headers);
+    try {
+      final response = await http.get(uri, headers: headers);
+      _logResponse('GET', uri, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get finance summary: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getFinanceSummary: $e');
+      throw Exception('Finance summary error: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getExpenses(String companyId) async {
+    final url = Uri.parse('$baseUrl/finance/expenses?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get expenses: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getExpenses: $e');
+      throw Exception('Expenses error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createExpense({
+    required String companyId,
+    required String description,
+    required double amount,
+    required String category,
+    String? date,
+    String? status,
+  }) async {
+    final url = Uri.parse('$baseUrl/finance/expenses');
+    final headers = await _getHeaders();
+    final Map<String, dynamic> bodyMap = {
+      'companyId': companyId,
+      'description': description,
+      'amount': amount,
+      'category': category,
+      if (date != null) 'date': date,
+      if (status != null) 'status': status,
+    };
+    final body = jsonEncode(bodyMap);
+    _logRequest('POST', url, headers: headers, body: body);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to create expense: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] createExpense: $e');
+      throw Exception('Create expense error: $e');
+    }
+  }
+
+  // --- Roles & Permissions APIs ---
+
+  static Future<List<dynamic>> getRoles(String companyId) async {
+    final url = Uri.parse('$baseUrl/access-control/roles?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get roles: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getRoles: $e');
+      throw Exception('Roles error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createRole({
+    required String name,
+    required String description,
+    required String companyId,
+    required List<String> permissionIds,
+  }) async {
+    final url = Uri.parse('$baseUrl/access-control/roles');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'name': name,
+      'description': description,
+      'companyId': companyId,
+      'permissionIds': permissionIds,
+    });
+    _logRequest('POST', url, headers: headers, body: body);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to create role: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] createRole: $e');
+      throw Exception('Create role error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateRole(
+    String id, {
+    required String name,
+    required String description,
+    required List<String> permissionIds,
+  }) async {
+    final url = Uri.parse('$baseUrl/access-control/roles/$id');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'name': name,
+      'description': description,
+      'permissionIds': permissionIds,
+    });
+    _logRequest('PUT', url, headers: headers, body: body);
+    try {
+      final response = await http.put(url, headers: headers, body: body);
+      _logResponse('PUT', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update role: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] updateRole: $e');
+      throw Exception('Update role error: $e');
+    }
+  }
+
+  static Future<void> deleteRole(String id) async {
+    final url = Uri.parse('$baseUrl/access-control/roles/$id');
+    final headers = await _getHeaders();
+    _logRequest('DELETE', url, headers: headers);
+    try {
+      final response = await http.delete(url, headers: headers);
+      _logResponse('DELETE', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete role: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] deleteRole: $e');
+      throw Exception('Delete role error: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getPermissions() async {
+    final url = Uri.parse('$baseUrl/access-control/permissions');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get permissions: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getPermissions: $e');
+      throw Exception('Permissions error: $e');
+    }
+  }
+
+  // --- Departments & Designations APIs ---
+
+  static Future<List<dynamic>> getDepartments(String companyId) async {
+    final url = Uri.parse('$baseUrl/departments?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get departments: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getDepartments: $e');
+      throw Exception('Departments error: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getDesignations(String companyId) async {
+    final url = Uri.parse('$baseUrl/designations?companyId=$companyId');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        final data = _extractData(jsonDecode(response.body));
+        return data is List ? data : [];
+      } else {
+        throw Exception('Failed to get designations: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getDesignations: $e');
+      throw Exception('Designations error: $e');
+    }
+  }
+
+  // --- Company Profile & GST APIs ---
+
+  static Future<Map<String, dynamic>> getCompanyProfile(String id) async {
+    final url = Uri.parse('$baseUrl/system-company/id/$id');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get company profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getCompanyProfile: $e');
+      throw Exception('Company profile error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateCompanyProfile(String id, Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/system-company/$id');
+    final headers = await _getHeaders();
+    final body = jsonEncode(data);
+    _logRequest('PATCH', url, headers: headers, body: body);
+    try {
+      final response = await http.patch(url, headers: headers, body: body);
+      _logResponse('PATCH', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update company profile: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] updateCompanyProfile: $e');
+      throw Exception('Update company profile error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCompanyGstDocs(String id) async {
+    final url = Uri.parse('$baseUrl/companies/$id');
+    final headers = await _getHeaders();
+    _logRequest('GET', url, headers: headers);
+    try {
+      final response = await http.get(url, headers: headers);
+      _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get GST docs: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] getCompanyGstDocs: $e');
+      throw Exception('Get GST docs error: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateCompanyGstDocs(String id, Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/companies/$id');
+    final headers = await _getHeaders();
+    final body = jsonEncode(data);
+    _logRequest('PATCH', url, headers: headers, body: body);
+    try {
+      final response = await http.patch(url, headers: headers, body: body);
+      _logResponse('PATCH', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _extractData(jsonDecode(response.body)) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update GST docs: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] updateCompanyGstDocs: $e');
+      throw Exception('Update GST docs error: $e');
+    }
+  }
+
+  static Future<void> deleteEmployee(String employeeId) async {
+    final url = Uri.parse('$baseUrl/employees/$employeeId');
+    final headers = await _getHeaders();
+    _logRequest('DELETE', url, headers: headers);
+    try {
+      final response = await http.delete(url, headers: headers);
+      _logResponse('DELETE', url, response);
+      await _handleUnauthorized(response);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete employee: ${response.body}');
+      }
+    } catch (e) {
+      _logger.e('❌ [API ERROR] deleteEmployee: $e');
+      throw Exception('Delete employee error: $e');
     }
   }
 }

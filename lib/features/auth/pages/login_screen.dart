@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               final data = await ApiService.login(email, password);
                               if (context.mounted) {
                                 String role = 'employee';
-                                if (data != null && data['user'] != null) {
+                                if (data['user'] != null) {
                                   role = UserModel.fromJson(data['user']).role.toLowerCase();
                                 }
                                 

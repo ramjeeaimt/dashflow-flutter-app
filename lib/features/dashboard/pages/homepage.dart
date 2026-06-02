@@ -11,8 +11,6 @@ import 'package:dashflow/features/auth/pages/login_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dashflow/features/activities/pages/location_page.dart';
 
-import 'package:dashflow/features/employees/pages/employees_list_screen.dart';
-import 'package:dashflow/features/payslip/pages/payslip_list_screen.dart';
 import 'package:dashflow/features/leaves/pages/leaves_screen.dart';
 import 'package:dashflow/features/activities/pages/attendance_history_page.dart';
 import 'package:dashflow/features/wfh/pages/wfh_screen.dart';
@@ -580,7 +578,8 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
-  }  @override
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,

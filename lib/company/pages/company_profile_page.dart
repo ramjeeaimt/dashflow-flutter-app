@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dashflow/core/api/api_service.dart';
+import 'package:dashflow/company/widgets/notif_badge.dart';
 
 class CompanyProfilePage extends StatefulWidget {
   const CompanyProfilePage({super.key});
@@ -8,587 +12,471 @@ class CompanyProfilePage extends StatefulWidget {
 }
 
 class _CompanyProfilePageState extends State<CompanyProfilePage> {
-  bool _isFollowing = false;
+  bool _isLoading = true;
+  bool _isEditing = false;
+  String? _companyId;
 
- 
-  final Map<String, dynamic> companyData = {
-    'name': 'TechFlow Solutions',
-    'logo': 'https://via.placeholder.com/120',
-    'cover': 'https://via.placeholder.com/400x200',
-    'tagline': 'Innovative Technology Solutions',
-    'industry': 'Information Technology',
-    'founded': '2015',
-    'headquarters': 'San Francisco, CA',
-    'employees': '500+',
-    'website': 'www.techflowsolutions.com',
-    'email': 'contact@techflow.com',
-    'phone': '+1 (415) 555-0123',
-    'about':
-        'TechFlow Solutions is a leading provider of innovative technology solutions for enterprises worldwide. We specialize in cloud computing, AI integration, and digital transformation services. Our dedicated team of experts works tirelessly to deliver cutting-edge solutions that drive business growth.',
-    'stats': [
-      {'label': 'Employees', 'value': '500+'},
-      {'label': 'Countries', 'value': '25+'},
-      {'label': 'Projects', 'value': '1000+'},
-      {'label': 'Clients', 'value': '300+'},
-    ],
-    'services': [
-      'Cloud Solutions',
-      'AI & Machine Learning',
-      'Data Analytics',
-      'Mobile Development',
-      'Web Development',
-      'IT Consulting',
-    ],
-    'locations': [
-      {
-        'city': 'San Francisco',
-        'country': 'USA',
-        'address': '123 Tech Street, San Francisco, CA 94105',
-        'phone': '+1 (415) 555-0123',
-      },
-      {
-        'city': 'London',
-        'country': 'UK',
-        'address': '456 Innovation Drive, London, UK',
-        'phone': '+44 20 7946 0958',
-      },
-      {
-        'city': 'Mumbai',
-        'country': 'India',
-        'address': '789 Business Park, Mumbai, India',
-        'phone': '+91 22 2341 3456',
-      },
-    ],
-  };
+  Map<String, dynamic> _profileData = {};
+  Map<String, dynamic> _gstData = {};
+
+  // Controllers for general info
+  final _nameController = TextEditingController();
+  final _websiteController = TextEditingController();
+  final _industryController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _postalCodeController = TextEditingController();
+  final _countryController = TextEditingController();
+  final _logoController = TextEditingController();
+
+  // Controllers for GST & Bank
+  final _gstNumberController = TextEditingController();
+  final _panNumberController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _accountNameController = TextEditingController();
+  final _accountNumberController = TextEditingController();
+  final _ifscCodeController = TextEditingController();
+  final _branchNameController = TextEditingController();
+
+  String _activeTab = 'General'; // General, GST & Bank
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _websiteController.dispose();
+    _industryController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _postalCodeController.dispose();
+    _countryController.dispose();
+    _logoController.dispose();
+
+    _gstNumberController.dispose();
+    _panNumberController.dispose();
+    _bankNameController.dispose();
+    _accountNameController.dispose();
+    _accountNumberController.dispose();
+    _ifscCodeController.dispose();
+    _branchNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user');
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        _companyId = user['company']?['id']?.toString();
+      }
+
+      if (_companyId != null) {
+        final profile = await ApiService.getCompanyProfile(_companyId!);
+        Map<String, dynamic> gst = {};
+        try {
+          gst = await ApiService.getCompanyGstDocs(_companyId!);
+        } catch (e) {
+          gst = {};
+        }
+
+        if (mounted) {
+          setState(() {
+            _profileData = profile;
+            _gstData = gst;
+
+            _nameController.text = _profileData['name']?.toString() ?? '';
+            _websiteController.text = _profileData['website']?.toString() ?? '';
+            _industryController.text = _profileData['industry']?.toString() ?? '';
+            _emailController.text = _profileData['email']?.toString() ?? '';
+            _phoneController.text = _profileData['phone']?.toString() ?? '';
+            _addressController.text = _profileData['address']?.toString() ?? '';
+            _cityController.text = _profileData['city']?.toString() ?? '';
+            _postalCodeController.text = _profileData['postalCode']?.toString() ?? '';
+            _countryController.text = _profileData['country']?.toString() ?? '';
+            _logoController.text = _profileData['logo']?.toString() ?? '';
+
+            _gstNumberController.text = _gstData['gstNumber']?.toString() ?? '';
+            _panNumberController.text = _gstData['panNumber']?.toString() ?? '';
+            _bankNameController.text = _gstData['bankName']?.toString() ?? '';
+            _accountNameController.text = _gstData['accountName']?.toString() ?? '';
+            _accountNumberController.text = _gstData['accountNumber']?.toString() ?? '';
+            _ifscCodeController.text = _gstData['ifscCode']?.toString() ?? '';
+            _branchNameController.text = _gstData['branchName']?.toString() ?? '';
+
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load company profile: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    if (_companyId == null) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final profilePayload = {
+        'name': _nameController.text.trim(),
+        'website': _websiteController.text.trim(),
+        'industry': _industryController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'address': _addressController.text.trim(),
+        'city': _cityController.text.trim(),
+        'postalCode': _postalCodeController.text.trim(),
+        'country': _countryController.text.trim(),
+        if (_logoController.text.isNotEmpty) 'logo': _logoController.text.trim(),
+      };
+
+      final gstPayload = {
+        'gstNumber': _gstNumberController.text.trim(),
+        'panNumber': _panNumberController.text.trim(),
+        'bankName': _bankNameController.text.trim(),
+        'accountName': _accountNameController.text.trim(),
+        'accountNumber': _accountNumberController.text.trim(),
+        'ifscCode': _ifscCodeController.text.trim(),
+        'branchName': _branchNameController.text.trim(),
+      };
+
+      await ApiService.updateCompanyProfile(_companyId!, profilePayload);
+      await ApiService.updateCompanyGstDocs(_companyId!, gstPayload);
+
+      await _loadData();
+      if (mounted) {
+        setState(() => _isEditing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Company profile updated successfully'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save profile: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final companyName = _profileData['name']?.toString() ?? 'Company Details';
+    final companyIndustry = _profileData['industry']?.toString() ?? 'Industry not set';
+    final companyLogo = _profileData['logo']?.toString() ?? '';
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
+      backgroundColor: kBg,
+      appBar: crmAppBar(
+        context,
+        _isEditing ? 'Edit Profile' : 'Company Profile',
         actions: [
-          PopupMenuButton(
-            itemBuilder: (context) => [
-              const PopupMenuItem(child: Text('Edit Profile')),
-              const PopupMenuItem(child: Text('Share')),
-              const PopupMenuItem(child: Text('Report')),
-            ],
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            
-            Stack(
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.edit, color: kPrimary),
+              onPressed: () => setState(() => _isEditing = true),
+            )
+          else
+            Row(
               children: [
-                Container(
-                  height: 200,
-                  color: Colors.blue.shade300,
-                  child: Image.network(
-                    companyData['cover'],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.blue.shade300,
-                        child: Center(
-                          child: Icon(
-                            Icons.image,
-                            size: 60,
-                            color: Colors.white30,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  onPressed: () {
+                    setState(() => _isEditing = false);
+                    _loadData(); // Revert edits
+                  },
                 ),
-               
-                Positioned(
-                  bottom: -40,
-                  left: 20,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                      color: Colors.white,
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        companyData['logo'],
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 120,
-                            height: 120,
-                            color: Colors.grey.shade200,
-                            child: Icon(
-                              Icons.business,
-                              size: 60,
-                              color: Colors.grey.shade400,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.check, color: Colors.green),
+                  onPressed: _saveChanges,
                 ),
               ],
-            ),
-            const SizedBox(height: 50),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            )
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: kPrimary))
+          : SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Banner and Logo Row
+                  Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              companyData['name'],
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              companyData['tagline'],
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                      Container(
+                        height: 140,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [kPrimary, Color(0xFF5582A6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() => _isFollowing = !_isFollowing);
-                        },
-                        icon: Icon(_isFollowing ? Icons.check : Icons.add),
-                        label: Text(_isFollowing ? 'Following' : 'Follow'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isFollowing
-                              ? Colors.blue.shade700
-                              : Colors.blue.shade100,
-                          foregroundColor: _isFollowing
-                              ? Colors.white
-                              : Colors.blue.shade700,
+                      Positioned(
+                        bottom: -35,
+                        left: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            color: Colors.white,
+                          ),
+                          child: ClipOval(
+                            child: companyLogo.isNotEmpty
+                                ? Image.network(
+                                    companyLogo,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => _buildPlaceholderLogo(),
+                                  )
+                                : _buildPlaceholderLogo(),
+                          ),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 45),
+
+                  // Title Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            companyName,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: kText,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            companyIndustry,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: kSubText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Tab Selectors
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: ['General', 'GST & Bank'].map((t) {
+                          final isSel = _activeTab == t;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _activeTab = t),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSel ? Colors.white : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  t,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                                    color: isSel ? kPrimary : kSubText,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Tab Contents
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _activeTab == 'General'
+                        ? _buildGeneralTab()
+                        : _buildGstBankTab(),
+                  ),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+    );
+  }
 
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  childAspectRatio: 1.2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                ),
-                itemCount: companyData['stats'].length,
-                itemBuilder: (context, index) {
-                  final stat = companyData['stats'][index];
-                  return _buildStatCard(stat['value'], stat['label']);
-                },
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      Icons.business,
-                      'Industry',
-                      companyData['industry'],
-                    ),
-                    const Divider(height: 20),
-                    _buildInfoRow(
-                      Icons.calendar_today,
-                      'Founded',
-                      companyData['founded'],
-                    ),
-                    const Divider(height: 20),
-                    _buildInfoRow(
-                      Icons.location_on,
-                      'Headquarters',
-                      companyData['headquarters'],
-                    ),
-                    const Divider(height: 20),
-                    _buildInfoRow(
-                      Icons.people,
-                      'Employees',
-                      companyData['employees'],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _buildSectionCard(
-                title: 'Contact Information',
-                child: Column(
-                  children: [
-                    _buildContactItem(
-                      icon: Icons.email,
-                      label: 'Email',
-                      value: companyData['email'],
-                    ),
-                    const Divider(height: 20),
-                    _buildContactItem(
-                      icon: Icons.phone,
-                      label: 'Phone',
-                      value: companyData['phone'],
-                    ),
-                    const Divider(height: 20),
-                    _buildContactItem(
-                      icon: Icons.language,
-                      label: 'Website',
-                      value: companyData['website'],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _buildSectionCard(
-                title: 'About Us',
-                child: Text(
-                  companyData['about'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _buildSectionCard(
-                title: 'Our Services',
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: (companyData['services'] as List<String>)
-                      .map((service) => _buildServiceChip(service))
-                      .toList(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _buildSectionCard(
-                title: 'Our Locations',
-                child: Column(
-                  children: List.generate(companyData['locations'].length, (
-                    index,
-                  ) {
-                    final location = companyData['locations'][index];
-                    return Column(
-                      children: [
-                        _buildLocationCard(location),
-                        if (index < companyData['locations'].length - 1)
-                          const Divider(height: 20),
-                      ],
-                    );
-                  }),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _launchEmail(companyData['email']),
-                    icon: const Icon(Icons.mail),
-                    label: const Text('Send Email'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => _launchPhone(companyData['phone']),
-                    icon: const Icon(Icons.phone),
-                    label: const Text('Call Company'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-          ],
-        ),
+  Widget _buildPlaceholderLogo() {
+    return Container(
+      width: 80,
+      height: 80,
+      color: kPrimaryLight,
+      child: const Icon(
+        Icons.business,
+        size: 40,
+        color: kPrimary,
       ),
     );
   }
 
-  Widget _buildStatCard(String value, String label) {
+  Widget _buildGeneralTab() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: kBorder),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          _buildField('Company Name', _nameController, Icons.business, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Industry', _industryController, Icons.category_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Website', _websiteController, Icons.language_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Email', _emailController, Icons.email_outlined, enabled: _isEditing, keyboardType: TextInputType.emailAddress),
+          const Divider(height: 24),
+          _buildField('Phone', _phoneController, Icons.phone_outlined, enabled: _isEditing, keyboardType: TextInputType.phone),
+          const Divider(height: 24),
+          _buildField('Address', _addressController, Icons.location_on_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('City', _cityController, Icons.location_city_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Postal Code', _postalCodeController, Icons.pin_drop_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Country', _countryController, Icons.public_outlined, enabled: _isEditing),
+          if (_isEditing) ...[
+            const Divider(height: 24),
+            _buildField('Logo Image URL', _logoController, Icons.image_outlined, enabled: true),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue.shade700, size: 24),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContactItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue.shade700),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionCard({required String title, required Widget child}) {
+  Widget _buildGstBankTab() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: kBorder),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          const Text(
+            'Taxation Details',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kPrimary),
           ),
           const SizedBox(height: 16),
-          child,
+          _buildField('GSTIN', _gstNumberController, Icons.receipt_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('PAN Number', _panNumberController, Icons.credit_card_outlined, enabled: _isEditing),
+          const SizedBox(height: 24),
+          const Text(
+            'Bank Account Details',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kPrimary),
+          ),
+          const SizedBox(height: 16),
+          _buildField('Account Holder Name', _accountNameController, Icons.person_outline, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Bank Name', _bankNameController, Icons.account_balance_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Account Number', _accountNumberController, Icons.numbers_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('IFSC Code', _ifscCodeController, Icons.code_outlined, enabled: _isEditing),
+          const Divider(height: 24),
+          _buildField('Branch Name', _branchNameController, Icons.map_outlined, enabled: _isEditing),
         ],
       ),
     );
   }
 
-  Widget _buildServiceChip(String service) {
-    return Chip(
-      label: Text(service),
-      backgroundColor: Colors.blue.shade100,
-      labelStyle: TextStyle(
-        color: Colors.blue.shade700,
-        fontWeight: FontWeight.w500,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    );
-  }
-
-  Widget _buildLocationCard(Map<String, dynamic> location) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '${location['city']}, ${location['country']}',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+  Widget _buildField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    required bool enabled,
+    TextInputType? keyboardType,
+  }) {
+    if (!enabled) {
+      final text = controller.text.isNotEmpty ? controller.text : '--';
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: kPrimary, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  text,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kText),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                location['address'],
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Text(
-              location['phone'],
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-            ),
-          ],
-        ),
-      ],
+        ],
+      );
+    }
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 14, color: kText, fontWeight: FontWeight.bold),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 12, color: kSubText),
+        prefixIcon: Icon(icon, color: kPrimary, size: 20),
+        border: const UnderlineInputBorder(),
+        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: kPrimary)),
+      ),
     );
-  }
-
-  void _launchEmail(String email) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Opening email client for $email')));
-  }
-
-  void _launchPhone(String phone) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Calling $phone')));
   }
 }
-  

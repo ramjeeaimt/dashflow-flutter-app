@@ -394,7 +394,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 trailing: Switch(
                   value: true,
                   onChanged: (val) {},
-                  activeColor: Colors.white,
+                  activeThumbColor: Colors.white,
                   activeTrackColor: const Color(0xFF36617E),
                 ),
                 showDivider: false,

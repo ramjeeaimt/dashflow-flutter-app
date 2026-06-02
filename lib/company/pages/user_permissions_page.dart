@@ -214,7 +214,7 @@ class _UserPermissionsScreenState extends State<UserPermissionsScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: _filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, i) =>
                         _buildUserTile(_filtered[i]),
                   ),
@@ -656,7 +656,7 @@ class _UserPermissionDetailScreenState
           Switch(
             value: isActive,
             onChanged: (_) => _toggleRole(role),
-            activeColor: color,
+            activeThumbColor: color,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
@@ -723,7 +723,7 @@ class _UserPermissionDetailScreenState
                 value: granted,
                 onChanged: (v) => setState(
                     () => _permissionOverrides[index]['granted'] = v),
-                activeColor: kPrimary,
+                activeThumbColor: kPrimary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],

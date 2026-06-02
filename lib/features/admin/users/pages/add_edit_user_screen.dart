@@ -121,7 +121,7 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
               _buildTextField('Company ID', _companyIdController, isRequired: false),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _role,
+                initialValue: _role,
                 decoration: InputDecoration(
                   labelText: 'Role',
                   filled: true,

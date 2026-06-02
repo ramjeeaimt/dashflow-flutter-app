@@ -5,7 +5,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +413,7 @@ class AppStrings {
   static const String sort = 'Sort';
 }
 class AppConstantsScreen extends StatefulWidget {
-  const AppConstantsScreen({Key? key}) : super(key: key);
+  const AppConstantsScreen({super.key});
 
   @override
   State<AppConstantsScreen> createState() => _AppConstantsScreenState();

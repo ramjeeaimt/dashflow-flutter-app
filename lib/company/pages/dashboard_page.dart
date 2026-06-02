@@ -1,110 +1,157 @@
 import 'package:flutter/material.dart';
+import 'package:dashflow/core/api/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Dashboard',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const DashboardPage(),
-    );
-  }
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class _DashboardPageState extends State<DashboardPage> {
+  bool _isLoading = true;
+  int _totalEmployees = 0;
+  int _presentToday = 0;
+  int _tasksCompleted = 0;
+  int _productivityScore = 0;
+  String? _companyId;
+  String _userName = 'Admin';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMetrics();
+  }
+
+  Future<void> _loadMetrics() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user');
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        _companyId = user['company']?['id']?.toString();
+        _userName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
+        if (_userName.isEmpty) _userName = 'Admin';
+      }
+
+      if (_companyId != null) {
+        final metrics = await ApiService.getDashboardMetrics(_companyId!);
+        if (mounted) {
+          setState(() {
+            _totalEmployees = metrics['totalEmployees'] ?? 0;
+            _presentToday = metrics['presentToday'] ?? 0;
+            _tasksCompleted = metrics['tasksCompleted'] ?? 0;
+            _productivityScore = metrics['avgProductivity'] ?? 0;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load dashboard metrics: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMetrics,
+          ),
         ],
       ),
       drawer: Drawer(
         child: ListView(
-          children: const [
+          children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
+              decoration: const BoxDecoration(color: Colors.blue),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 35),
+                    child: Icon(Icons.person, size: 35, color: Colors.blue),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'Welcome User',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    'Welcome $_userName',
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            ListTile(leading: Icon(Icons.home), title: Text('Home')),
-            ListTile(leading: Icon(Icons.analytics), title: Text('Analytics')),
-            ListTile(leading: Icon(Icons.settings), title: Text('Settings')),
+            const ListTile(leading: Icon(Icons.home), title: Text('Home')),
+            const ListTile(leading: Icon(Icons.analytics), title: Text('Analytics')),
+            const ListTile(leading: Icon(Icons.settings), title: Text('Settings')),
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Overview',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: const [
-                  DashboardCard(
-                    title: 'Users',
-                    value: '1,250',
-                    icon: Icons.people,
-                    color: Colors.orange,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Company Overview',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                  DashboardCard(
-                    title: 'Sales',
-                    value: '\$12K',
-                    icon: Icons.shopping_cart,
-                    color: Colors.green,
-                  ),
-                  DashboardCard(
-                    title: 'Orders',
-                    value: '320',
-                    icon: Icons.receipt_long,
-                    color: Colors.blue,
-                  ),
-                  DashboardCard(
-                    title: 'Messages',
-                    value: '87',
-                    icon: Icons.message,
-                    color: Colors.purple,
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      children: [
+                        DashboardCard(
+                          title: 'Total Employees',
+                          value: '$_totalEmployees',
+                          icon: Icons.people,
+                          color: Colors.orange.shade700,
+                        ),
+                        DashboardCard(
+                          title: 'Present Today',
+                          value: '$_presentToday',
+                          icon: Icons.check_circle_outline,
+                          color: Colors.green.shade700,
+                        ),
+                        DashboardCard(
+                          title: 'Tasks Completed',
+                          value: '$_tasksCompleted',
+                          icon: Icons.task_alt,
+                          color: Colors.blue.shade700,
+                        ),
+                        DashboardCard(
+                          title: 'Productivity',
+                          value: '$_productivityScore%',
+                          icon: Icons.trending_up,
+                          color: Colors.purple.shade700,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         items: const [
@@ -143,17 +190,20 @@ class DashboardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: Colors.white),
+          Icon(icon, size: 36, color: Colors.white),
           const SizedBox(height: 10),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -161,7 +211,8 @@ class DashboardCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             title,
-            style: const TextStyle(fontSize: 16, color: Colors.white70),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: Colors.white90, fontWeight: FontWeight.w500),
           ),
         ],
       ),

@@ -220,7 +220,7 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-Container(
+void Container(
   decoration = const BoxDecoration(
     gradient: LinearGradient(
       begin: Alignment.topLeft,
